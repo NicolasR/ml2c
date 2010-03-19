@@ -4,10 +4,12 @@
 /**
  * 
  */
-
+#include "runtime.c"
   MLstring a___1;
   MLstring b___3;
-  MLbool test___5;
+  MLlist l___5;
+  MLpair p___11;
+  MLbool test___15;
 
 int main(int argc, char* argv) {
 
@@ -24,31 +26,61 @@ b___3=new_MLstring("2");
   bidon___4=MLprint( &b___3);
 }
 { 
-  MLbool T___6;
+  MLstring T___6;
+  MLlist T___7;
+  T___6=new_MLstring("a");
   { 
-    MLstring T___7;
     MLstring T___8;
-    T___7=a___1;
-    T___8=b___3;
-    T___6=MLequal( &T___7, &T___8);
+    MLlist T___9;
+    T___8=new_MLstring("b");
+    T___9=MLnil();
+    T___7=new_MLlist( &T___8,&T___9);
   }
-  if (T___6.val)
+  l___5=new_MLlist(&T___6,&T___7);
+}
+{ 
+  MLunit bidon___10;
+  bidon___10=new_MLunit();
+  bidon___10=MLprint( &l___5);
+}
+{ 
+  MLstring T___12;
+  MLstring T___13;
+  T___12=new_MLstring("c");
+  T___13=new_MLstring("d");
+  p___11=new_MLpair( &T___12,&T___13);
+}
+{ 
+  MLunit bidon___14;
+  bidon___14=new_MLunit();
+  bidon___14=MLprint( &p___11);
+}
+{ 
+  MLbool T___16;
+  { 
+    MLstring T___17;
+    MLstring T___18;
+    T___17=a___1;
+    T___18=b___3;
+    T___16=MLequal( &T___17, &T___18);
+  }
+  if (T___16.val)
     { 
-      MLbool T___9;
-      T___9=MLtrue();
-      test___5=T___9;
+      MLbool T___19;
+      T___19=MLtrue();
+      test___15=T___19;
     }
   else
     { 
-      MLbool T___10;
-      T___10=MLfalse();
-      test___5=T___10;
+      MLbool T___20;
+      T___20=MLfalse();
+      test___15=T___20;
     }
 }
 { 
-  MLunit bidon___11;
-  bidon___11=new_MLunit();
-  bidon___11=MLprint( &test___5);
+  MLunit bidon___21;
+  bidon___21=new_MLunit();
+  bidon___21=MLprint( &test___15);
 }
 }
 

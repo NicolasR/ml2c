@@ -4,6 +4,10 @@
 struct MLvalue {
   int id;
   void* val;
+  void* MLcar;
+  void* MLcdr;
+  void* MLfst;
+  void* MLsnd;
 };
 typedef struct MLvalue MLvalue;
 
@@ -153,16 +157,18 @@ MLstring new_MLstring(char* s){
 
 MLpair new_MLpair(void* a, void* b){
   MLpair pair;
+  pair.id = 5;
   pair.MLfst = a;
   pair.MLsnd = b;
   return pair;
 }
 
 MLlist new_MLlist(void* a, void* b){
-  MLlist liste;
-  liste.MLcar = a;
-  liste.MLcdr = b;
-  return liste;
+  MLlist list;
+  list.id = 6;
+  list.MLcar = a;
+  list.MLcdr = b;
+  return list;
 }
 
 MLprimitive new_MLprimitive(char* n){
@@ -283,6 +289,7 @@ MLlist MLnil(void){
 
 MLunit MLprint(void* x){
 
+  printf("passe ici\n");
   MLvalue* temp = (MLvalue*) x;
   switch(temp->id){
     case 1: 
@@ -299,6 +306,23 @@ MLunit MLprint(void* x){
       break;
     case 4:
       printf("%s\n", (temp->val));
+      break;
+    case 5:
+      printf("(");
+      MLprint(temp->MLfst);
+      printf(",");
+      MLprint(temp->MLsnd);
+      printf(")");
+      break;
+    case 6:
+      if(temp->MLcar == NULL)
+	printf("[]\n");
+      else
+      {
+	MLprint(temp->MLcar);
+	printf("::");
+	MLprint(temp->MLcdr);
+      }
       break;
     default:
       printf("Erreur Affichage! Arret programme\n");

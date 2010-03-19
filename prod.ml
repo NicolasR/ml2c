@@ -65,9 +65,9 @@ initial_special_env :=
 initial_trans_env:= 
 
 let alpha = max_unknown () in
-[",",("MLruntime.MLpair", Fun_type (Pair_type (alpha,alpha),
+[",",("new_MLpair", Fun_type (Pair_type (alpha,alpha),
                                     Pair_type (alpha,alpha)))]@
-["::",("MLruntime.MLlist", Fun_type (Pair_type (alpha,alpha),
+["::",("new_MLlist", Fun_type (Pair_type (alpha,alpha),
                                     List_type (alpha)))]@
 
 (
@@ -266,7 +266,7 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
 	   begin
 	     out (name^"( ");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     List.iter2 (fun x y -> out (",("^(string_of_type y)^")");
+	     List.iter2 (fun x y -> out (",");
 			   prod_instr (false,"",nb+1) x) 
                (List.tl instrl) (List.tl ltp);
 	     out ")" ;
