@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 struct MLvalue {
   int id;
   void* val;
@@ -44,7 +44,9 @@ typedef struct MLstring MLstring;
 struct MLpair {
   int id;
   void* MLfst;
+  int type1;
   void* MLsnd;
+  int type2;
 };
 typedef struct MLpair MLpair;
 
@@ -52,7 +54,9 @@ typedef struct MLpair MLpair;
 struct MLlist {
   int id;
   void* MLcar;
+  int type1;
   void* MLcdr;
+  int type2;
 };
 typedef struct MLlist MLlist;
 
@@ -155,11 +159,13 @@ MLstring new_MLstring(char* s){
   return string;
 }
 
-MLpair new_MLpair(void* a, void* b){
+MLpair new_MLpair(void* a, int type1, void* b, int type2){
   MLpair pair;
   pair.id = 5;
   pair.MLfst = a;
+  pair.type1 = type1;
   pair.MLsnd = b;
+  pair.type2 = type2;
   return pair;
 }
 
@@ -287,46 +293,79 @@ MLlist MLnil(void){
   return new_MLlist(NULL,NULL);
 }
 
-MLunit MLprint(void* x){
+MLunit MLprint(void* x, int type){
+  int type1, type2;
+  MLpair* temppair;
+  MLlist* templist;
+  int valint;
+  double valdouble;
+  char* s;
 
-  printf("passe ici\n");
-  MLvalue* temp = (MLvalue*) x;
-  switch(temp->id){
+  switch(type){
+    case 1:
+      valint = ((MLbool*)x)->val;
+      break;
+    case 2:
+      valint = ((MLint*)x)->val;
+      break;
+    /*case 3:
+      id = ((MLdouble*)x)->id;
+      break;*/
+    case 4:
+      s = ((MLstring*)x)->val;  
+      break;
+    case 5:
+      temppair = (MLpair*)x;
+      type1 = temppair->type1;
+      type2 = temppair->type2;
+      break;
+    default:
+	printf("error");
+  }
+  switch(type){
     case 1: 
-      if(temp->val)
+        //printf("debug: booleen\n");
+      if(valint)
       	printf("true\n");
       else
 	printf("false\n");
       break;
     case 2:
-      printf("%d\n", (temp->val));
+	//printf("debug: entier\n");
+      printf("%d\n", (valint));
       break;
     case 3:
-      printf("%lf\n", (temp->val));
+	//printf("debug: double\n");
+      printf("%lf\n", (valdouble));
       break;
     case 4:
-      printf("%s\n", (temp->val));
+	//printf("debug: chaine\n");
+      printf("%s\n", (s));
       break;
     case 5:
+      //printf("debug: paire\n");
       printf("(");
-      MLprint(temp->MLfst);
+      //MLvalue* t = temp->MLfst;
+	//printf("debug type: %d", type1);
+      MLprint(temppair->MLfst, type1);
       printf(",");
-      MLprint(temp->MLsnd);
+      MLprint(temppair->MLsnd, type2);
       printf(")");
       break;
     case 6:
-      if(temp->MLcar == NULL)
+	//printf("debug: liste\n");
+      if(templist->MLcar == NULL)
 	printf("[]\n");
       else
       {
-	MLprint(temp->MLcar);
+	MLprint(templist->MLcar,type1);
 	printf("::");
-	MLprint(temp->MLcdr);
+	MLprint(templist->MLcdr,type2);
       }
       break;
     default:
       printf("Erreur Affichage! Arret programme\n");
-      //exit();	
+      exit(1);	
   }
   MLunit unit = MLlrp();
   return unit;

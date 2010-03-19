@@ -251,7 +251,6 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
    (*out (name^"( ("^(string_of_type (List.hd ltp))^")");*)
    begin
      match name with (* A COMPLETER??? *)
-       | "MLequal"
        | "MLprint" ->
 	   begin
 	     out (name^"( &");
@@ -259,14 +258,32 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
 	     List.iter2 (fun x y -> out (", &");
 			   prod_instr (false,"",nb+1) x) 
                (List.tl instrl) (List.tl ltp);
-	     out ")" ;
+	     out(", ");
+	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     out (".id)") ;
+	     out_after(fr,sd,nb)
+	   end
+       | "new_MLpair" -> 
+	  begin
+	     out (name^"( &");
+	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     out (", ");
+	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     out (".id");
+	     List.iter2 (fun x y -> out (", &");
+			   prod_instr (false,"",nb+1) x) 
+               (List.tl instrl) (List.tl ltp);
+	     out (", ");
+	     List.iter2 (fun x y -> prod_instr (false,"",nb+1) x) 
+               (List.tl instrl) (List.tl ltp);
+	     out (".id )") ;
 	     out_after(fr,sd,nb)
 	   end
        | _ ->
 	   begin
-	     out (name^"( ");
+	     out (name^"( &");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     List.iter2 (fun x y -> out (",");
+	     List.iter2 (fun x y -> out (", &");
 			   prod_instr (false,"",nb+1) x) 
                (List.tl instrl) (List.tl ltp);
 	     out ")" ;
