@@ -5,63 +5,94 @@
  * 
  */
 #include "runtime.c"
-  MLstring a___1;
-  MLstring b___3;
-  MLpair p___5;
-  MLbool test___9;
+  MLpair a___1;
+  MLpair b___5;
+  MLpair p___9;
+  MLlist q___13;
+  MLbool test___19;
 
 int main(int argc, char* argv) {
 
-a___1=new_MLstring("1");
 { 
-  MLunit bidon___2;
-  bidon___2=new_MLunit();
-  bidon___2=MLprint( &a___1, a___1.id);
+  MLint T___2;
+  MLint T___3;
+  T___2=new_MLint(2);
+  T___3=new_MLint(1);
+  a___1=new_MLpair( &T___2, T___2.id, &T___3, T___3.id );
 }
-b___3=new_MLstring("2");
 { 
   MLunit bidon___4;
   bidon___4=new_MLunit();
-  bidon___4=MLprint( &b___3, b___3.id);
+  bidon___4=MLprint( &a___1, a___1.id, 1);
 }
 { 
-  MLstring T___6;
-  MLstring T___7;
-  T___6=new_MLstring("c");
-  T___7=new_MLstring("d");
-  p___5=new_MLpair( &T___6, T___6.id, &T___7, T___7.id );
+  MLint T___6;
+  MLint T___7;
+  T___6=new_MLint(2);
+  T___7=new_MLint(1);
+  b___5=new_MLpair( &T___6, T___6.id, &T___7, T___7.id );
 }
 { 
   MLunit bidon___8;
   bidon___8=new_MLunit();
-  bidon___8=MLprint( &p___5, p___5.id);
+  bidon___8=MLprint( &b___5, b___5.id, 1);
 }
 { 
-  MLbool T___10;
+  MLstring T___10;
+  MLstring T___11;
+  T___10=new_MLstring("c");
+  T___11=new_MLstring("d");
+  p___9=new_MLpair( &T___10, T___10.id, &T___11, T___11.id );
+}
+{ 
+  MLunit bidon___12;
+  bidon___12=new_MLunit();
+  bidon___12=MLprint( &p___9, p___9.id, 1);
+}
+{ 
+  MLdouble T___14;
+  MLlist T___15;
+  T___14=new_MLdouble(2.1);
   { 
-    MLstring T___11;
-    MLstring T___12;
-    T___11=a___1;
-    T___12=b___3;
-    T___10=MLequal( &T___11, &T___12);
+    MLdouble T___16;
+    MLlist T___17;
+    T___16=new_MLdouble(2.1);
+    T___17=MLnil();
+    T___15=new_MLlist( &T___16, T___16.id, &T___17);
   }
-  if (T___10.val)
+  q___13=new_MLlist( &T___14, T___14.id, &T___15);
+}
+{ 
+  MLunit bidon___18;
+  bidon___18=new_MLunit();
+  bidon___18=MLprint( &q___13, q___13.id, 1);
+}
+{ 
+  MLbool T___20;
+  { 
+    MLpair T___21;
+    MLpair T___22;
+    T___21=a___1;
+    T___22=b___5;
+    T___20=MLequal( &T___21, &T___22);
+  }
+  if (T___20.val)
     { 
-      MLbool T___13;
-      T___13=MLtrue();
-      test___9=T___13;
+      MLbool T___23;
+      T___23=MLtrue();
+      test___19=T___23;
     }
   else
     { 
-      MLbool T___14;
-      T___14=MLfalse();
-      test___9=T___14;
+      MLbool T___24;
+      T___24=MLfalse();
+      test___19=T___24;
     }
 }
 { 
-  MLunit bidon___15;
-  bidon___15=new_MLunit();
-  bidon___15=MLprint( &test___9, test___9.id);
+  MLunit bidon___25;
+  bidon___25=new_MLunit();
+  bidon___25=MLprint( &test___19, test___19.id, 1);
 }
 }
 

@@ -24,7 +24,7 @@ open Env_typeur;;
 open Env_trans;;
 open Langinter;;
 
-
+let ifuncn = 0
 (* des symboles globaux bien utiles par la suite *)
 
 let compiler_name = ref "ml2c";;
@@ -238,10 +238,13 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
              
 | APPLY(i1,i2) -> 
    out_before(fr,sd,nb);
-     out ("((MLfun)");
+     (*out ("((MLfun)");
      prod_instr (false,"",nb) i1;
      out ")";
-     out ".invoke(";
+     out ".invoke(";*)
+     out ("invoke"^(string_of_int ifuncn)^"( &");
+     prod_instr (false,"",nb) i1;
+     out ", &";
      prod_instr (false,"",nb) i2;     
      out")";
    out_after(fr,sd,nb)
@@ -260,7 +263,7 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
                (List.tl instrl) (List.tl ltp);
 	     out(", ");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     out (".id)") ;
+	     out (".id, 1)") ;
 	     out_after(fr,sd,nb)
 	   end
        | "new_MLpair" -> 
@@ -277,6 +280,19 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
 	     List.iter2 (fun x y -> prod_instr (false,"",nb+1) x) 
                (List.tl instrl) (List.tl ltp);
 	     out (".id )") ;
+	     out_after(fr,sd,nb)
+	   end
+       | "new_MLlist" ->
+	   begin
+	     out (name^"( &");
+	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     out (", ");
+	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     out (".id");
+	     List.iter2 (fun x y -> out (", &");
+			   prod_instr (false,"",nb+1) x) 
+               (List.tl instrl) (List.tl ltp);
+	     out (")");
 	     out_after(fr,sd,nb)
 	   end
        | _ ->
@@ -305,27 +321,29 @@ let fun_header fn cn  =
 
 let prod_invoke cn  ar = 
   List.iter out_line 
-     ["  public MLvalue invoke(MLvalue MLparam){";
-      "    if (MLcounter == (MAX-1)) {"
+     ["  invoke_"^(string_of_int ifuncn)^"(MLfun* func, void* MLparam){";
+      "    func->MAX = "^(string_of_int ar)^";";
+      "    if (func->MLcounter == (func->MAX-1)) {"
      ];
 
-  out "      return invoke_real(";
+  out ("      return invoke_real"^(string_of_int ifuncn)^"(");
   for i=0 to ar-2 do 
-    out ("MLenv["^(string_of_int i)^"], ")
+    out ("func->MLenv["^(string_of_int i)^"], ")
   done;
   out_line "MLparam);";     
 
   List.iter out_line 
      ["    }";
       "    else {";
-      "      "^cn^" l = new "^cn^"(MLcounter+1);l.MLaddenv(MLenv,MLparam); return l;";
+      "      func->MLcounter = func->MLcounter + 1;";
+      "      MLaddenv(func->MLenv, MLparam, &func); return func;";
       "    }";
       "  }"
       ]
 ;;
 
 let prod_invoke_fun cn ar t lp instr = 
-  out_start "MLvalue invoke_real(" 1;
+  out_start ("void* invoke_real"^(string_of_int ifuncn)^"(") 1;
   out ("MLvalue "^(List.hd lp));
   List.iter (fun x -> out (", MLvalue "^x)) (List.tl lp);
   out_line ") {";
@@ -339,20 +357,21 @@ let prod_fun instr = match instr with
   FUNCTION (ns,t1,ar,(lp,t2),instr) -> 
       let class_name = "MLfun_"^ns in
       fun_header ns class_name ;
-      out_line ("class "^class_name^" extends MLfun {");
+      (*out_line ("class "^class_name^" extends MLfun {");
       out_line "";
       out_line ("  private static int MAX = "^(string_of_int ar)^";") ;
       out_line "";
       out_line ("  "^class_name^"() {super();}") ;
       out_line "";
-      out_line ("  "^class_name^"(int n) {super(n);}") ;      
-      out_line "";
-      prod_invoke class_name ar;
-      out_line "";
+      out_line ("  "^class_name^"(int n) {super(n);}") ;    *)  
       prod_invoke_fun class_name ar t1 lp instr;
-      out_line "";           
+      out_line "";
+      prod_invoke "MLfun" ar;
+      out_line "";
+
+      out_line ""(*;           
       out_line "}";
-      out_line ("// fin de la classe "^class_name)
+      out_line ("// fin de la classe "^class_name)*)
       
       
 |  _ -> ()

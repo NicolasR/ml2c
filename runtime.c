@@ -1,13 +1,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+//A supprimer??
 struct MLvalue {
   int id;
   void* val;
-  void* MLcar;
+/*  void* MLcar;
   void* MLcdr;
   void* MLfst;
-  void* MLsnd;
+  void* MLsnd;*/
 };
 typedef struct MLvalue MLvalue;
 
@@ -40,7 +41,6 @@ struct MLstring {
 };
 typedef struct MLstring MLstring;
 
-//A def Union? Supprimer id?
 struct MLpair {
   int id;
   void* MLfst;
@@ -50,22 +50,42 @@ struct MLpair {
 };
 typedef struct MLpair MLpair;
 
-//A def
+
 struct MLlist {
   int id;
   void* MLcar;
   int type1;
   void* MLcdr;
-  int type2;
 };
 typedef struct MLlist MLlist;
 
 struct MLfun {
   int id;
-  //???
+  int MLcounter;
+  int size;
+  int MAX;
+  void** MLenv;
 };
 typedef struct MLfun MLfun;
 
+MLfun new_fun(int n){
+  MLfun function;// = malloc(sizeof *function + sizeof(void*[n]));
+  function.id = 666;
+  function.MLcounter = 0;
+  function.size = 0;
+  function.MLenv = (void**)malloc(sizeof(void*)*n);
+  return function;
+}
+
+void MLaddenv(void** O_env, void* a, MLfun* func){
+  int i=0;
+  void** MLenv = malloc(sizeof(void*)*(func->size+1));
+  for (i; i< func->MLcounter; i++){
+    MLenv[i]=O_env[i];
+  }
+  MLenv[func->MLcounter]=a;
+  func->MLcounter++;
+}
 
 /*
 astract class MLfun extends MLvalue
@@ -144,13 +164,13 @@ MLint new_MLint(int val){
   return integer;
 }
 
-/*
+
 MLdouble new_MLdouble(double val){
-  MLdouble double;
-  double.id = 3;
-  double.val = val;
-  return double;
-}*/
+  MLdouble doubleval;
+  doubleval.id = 3;
+  doubleval.val = val;
+  return doubleval;
+}
 
 MLstring new_MLstring(char* s){
   MLstring string;
@@ -169,10 +189,11 @@ MLpair new_MLpair(void* a, int type1, void* b, int type2){
   return pair;
 }
 
-MLlist new_MLlist(void* a, void* b){
+MLlist new_MLlist(void* a, int type1, void* b){
   MLlist list;
   list.id = 6;
   list.MLcar = a;
+  list.type1 = type1;
   list.MLcdr = b;
   return list;
 }
@@ -290,17 +311,17 @@ MLunit MLlrp(void){
 }
 
 MLlist MLnil(void){
-  return new_MLlist(NULL,NULL);
+  return new_MLlist(NULL, 0, NULL);
 }
 
-MLunit MLprint(void* x, int type){
+MLunit MLprint(void* x, int type, int cr){
   int type1, type2;
   MLpair* temppair;
   MLlist* templist;
   int valint;
   double valdouble;
   char* s;
-
+//printf("type: %d\n", type);
   switch(type){
     case 1:
       valint = ((MLbool*)x)->val;
@@ -308,9 +329,9 @@ MLunit MLprint(void* x, int type){
     case 2:
       valint = ((MLint*)x)->val;
       break;
-    /*case 3:
-      id = ((MLdouble*)x)->id;
-      break;*/
+    case 3:
+      valdouble = ((MLdouble*)x)->val;
+      break;
     case 4:
       s = ((MLstring*)x)->val;  
       break;
@@ -319,54 +340,60 @@ MLunit MLprint(void* x, int type){
       type1 = temppair->type1;
       type2 = temppair->type2;
       break;
+    case 6:
+      templist = (MLlist*)x;
+      type1 = templist->type1;
+      break;
     default:
-	printf("error");
+	printf("Erreur print! Arret programme\n");
   }
   switch(type){
     case 1: 
         //printf("debug: booleen\n");
       if(valint)
-      	printf("true\n");
+      	printf("true");
       else
-	printf("false\n");
+	printf("false");
       break;
     case 2:
 	//printf("debug: entier\n");
-      printf("%d\n", (valint));
+      printf("%d", (valint));
       break;
     case 3:
 	//printf("debug: double\n");
-      printf("%lf\n", (valdouble));
+      printf("%lf", (valdouble));
       break;
     case 4:
 	//printf("debug: chaine\n");
-      printf("%s\n", (s));
+      printf("\"%s\"", (s));
       break;
     case 5:
       //printf("debug: paire\n");
       printf("(");
       //MLvalue* t = temp->MLfst;
 	//printf("debug type: %d", type1);
-      MLprint(temppair->MLfst, type1);
+      MLprint(temppair->MLfst, type1, 0);
       printf(",");
-      MLprint(temppair->MLsnd, type2);
+      MLprint(temppair->MLsnd, type2, 0);
       printf(")");
       break;
     case 6:
 	//printf("debug: liste\n");
       if(templist->MLcar == NULL)
-	printf("[]\n");
+	printf("[]");
       else
       {
-	MLprint(templist->MLcar,type1);
+	MLprint(templist->MLcar,type1, 0);
 	printf("::");
-	MLprint(templist->MLcdr,type2);
+	MLprint(templist->MLcdr,6, 0);
       }
       break;
     default:
-      printf("Erreur Affichage! Arret programme\n");
+      printf("Erreur print! Arret programme\n");
       exit(1);	
   }
+  if (cr)
+    printf("\n");
   MLunit unit = MLlrp();
   return unit;
 }
