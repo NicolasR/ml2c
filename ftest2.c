@@ -4,12 +4,14 @@
 /**
  * 
  */
+
 #include "runtime.c"
   MLpair a___1;
   MLpair b___5;
   MLpair p___9;
   MLlist q___13;
   MLbool test___19;
+  MLdouble test2___26;
 
 int main(int argc, char* argv) {
 
@@ -56,7 +58,7 @@ int main(int argc, char* argv) {
   { 
     MLdouble T___16;
     MLlist T___17;
-    T___16=new_MLdouble(2.1);
+    T___16=new_MLdouble(2.2);
     T___17=MLnil();
     T___15=new_MLlist( &T___16, T___16.id, &T___17);
   }
@@ -93,6 +95,18 @@ int main(int argc, char* argv) {
   MLunit bidon___25;
   bidon___25=new_MLunit();
   bidon___25=MLprint( &test___19, test___19.id, 1);
+}
+{ 
+  MLfun T___27;
+  MLlist T___28;
+  T___27=MLhd;
+  T___28=q___13;
+  test2___26=invoke0( &T___27, &T___28);
+}
+{ 
+  MLunit bidon___29;
+  bidon___29=new_MLunit();
+  bidon___29=MLprint( &test2___26, test2___26.id, 1);
 }
 }
 

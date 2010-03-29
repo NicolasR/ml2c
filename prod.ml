@@ -24,7 +24,10 @@ open Env_typeur;;
 open Env_trans;;
 open Langinter;;
 
-let ifuncn = 0
+let ifuncn = ref 0
+let ifuncn2 = ref 0
+let needtocast = ref []
+let funs = ref []
 (* des symboles globaux bien utiles par la suite *)
 
 let compiler_name = ref "ml2c";;
@@ -180,7 +183,8 @@ let rec string_of_type typ = match typ with
 let prod_global_var instr = match instr with
   VAR (v,t) -> out_start ((string_of_type t)^v^";") 1 
 | FUNCTION (ns,t1,ar,(p,t2), instr) ->
-    out_start ("const MLvalue "(*"fun_"^ns^" "*)^ns^"= new MLfun_"^ns^"("^(string_of_int ar)^");") 1
+    out_start ("MLfun "(*"fun_"^ns^" "*)^ns^"= new_MLfun_"^ns^"("^(string_of_int ar)^", "^(string_of_int !ifuncn2)^");") 1;
+    ifuncn2 := !ifuncn2 + 1
 | _ -> ()
 ;;
 
@@ -209,12 +213,15 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
   CONST c -> out_before (fr,sd,nb);
              prod_const c;
              out_after (fr,sd,nb)
-| VAR (v,t)
+| VAR (v,t) 
           -> if (nb = 0) && ( sd = "") then ()
              else 
              begin 
                out_before (fr,sd,nb);
-               out v;
+		(* On cast les variables issues de fonctions avec le bon type*)
+		if (List.exists (fun x -> x = v) !needtocast) then
+		  out ("("^(string_of_type t)^")");               
+		out v;
                out_after (fr,sd,nb)           
              end
 | IF(i1,i2,i3) -> 
@@ -227,7 +234,7 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
               prod_instr (fr,sd,nb+1) i2 ;
               out_start "else" (nb);
               prod_instr (fr,sd,nb+1) i3
-| RETURN i -> prod_instr (true,"",nb) i
+| RETURN i -> prod_instr (true,"",nb) i;
 | AFFECT (v,i) -> prod_instr (false,v,nb) i
 | BLOCK(l,i) -> out_start "{ " nb;
                   List.iter (fun (v,t,i) -> prod_local_var (false,"",nb+1) 
@@ -242,7 +249,7 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
      prod_instr (false,"",nb) i1;
      out ")";
      out ".invoke(";*)
-     out ("invoke"^(string_of_int ifuncn)^"( &");
+     out ("invoke"^(string_of_int !ifuncn)^"( &");
      prod_instr (false,"",nb) i1;
      out ", &";
      prod_instr (false,"",nb) i2;     
@@ -321,12 +328,12 @@ let fun_header fn cn  =
 
 let prod_invoke cn  ar = 
   List.iter out_line 
-     ["  invoke_"^(string_of_int ifuncn)^"(MLfun* func, void* MLparam){";
+     ["  invoke_"^(string_of_int !ifuncn)^"(MLfun* func, void* MLparam){";
       "    func->MAX = "^(string_of_int ar)^";";
       "    if (func->MLcounter == (func->MAX-1)) {"
      ];
 
-  out ("      return invoke_real"^(string_of_int ifuncn)^"(");
+  out ("      return invoke_real"^(string_of_int !ifuncn)^"(");
   for i=0 to ar-2 do 
     out ("func->MLenv["^(string_of_int i)^"], ")
   done;
@@ -343,14 +350,17 @@ let prod_invoke cn  ar =
 ;;
 
 let prod_invoke_fun cn ar t lp instr = 
-  out_start ("void* invoke_real"^(string_of_int ifuncn)^"(") 1;
-  out ("MLvalue "^(List.hd lp));
-  List.iter (fun x -> out (", MLvalue "^x)) (List.tl lp);
+  funs := ("invoke_real"^(string_of_int !ifuncn))::!funs;
+  out_start ("void* invoke_real"^(string_of_int !ifuncn)^"(") 1;
+  needtocast := (List.hd lp)::!needtocast;
+  out ("void* "^(List.hd lp));
+  List.iter (fun x -> out (", void* "^x); needtocast := x::!needtocast;) (List.tl lp);
   out_line ") {";
   prod_instr (true,"",2) instr;
   
   out_start "}" 1;
-  out_line ""
+  out_line "";
+    ifuncn := !ifuncn + 1;
 ;;
 
 let prod_fun instr = match instr with 
@@ -400,6 +410,17 @@ let prod_file filename ast_li =
     header_main  filename;
     header_one  filename;
     prod_one  ast_li;
+
+    (**DECLARATION DE TABLEAU *)
+    out ("void** tabfun = (void**)malloc(sizeof(void*)*");
+    out (string_of_int (List.length !funs));
+    out_line (");");
+    let i = ref 0 in
+    List.iter (fun x -> 
+	out ("tabfun["^(string_of_int !i)^"]");
+	out_line (" = &"^x^";");
+	i := !i+1) !funs;
+
     footer_one  filename;
     header_two  filename;
     prod_two  ast_li;
@@ -408,6 +429,7 @@ let prod_file filename ast_li =
     prod_three  ast_li;
     footer_three  filename;
     footer_main  filename;
+
     close_out oc
   with x -> close_out oc; raise x;;
 

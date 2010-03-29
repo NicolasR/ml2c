@@ -61,6 +61,9 @@ typedef struct MLlist MLlist;
 
 struct MLfun {
   int id;
+  char* name;
+  int isPrimitive;
+  int number;
   int MLcounter;
   int size;
   int MAX;
@@ -68,9 +71,11 @@ struct MLfun {
 };
 typedef struct MLfun MLfun;
 
-MLfun new_fun(int n){
+MLfun new_fun(int n, int funnumber){
   MLfun function;// = malloc(sizeof *function + sizeof(void*[n]));
   function.id = 666;
+  function.isPrimitive = 0;
+  function.number = funnumber;
   function.MLcounter = 0;
   function.size = 0;
   function.MLenv = (void**)malloc(sizeof(void*)*n);
@@ -115,9 +120,11 @@ astract class MLfun extends MLvalue
 struct MLprimitive {
   int id;
   char* name;
-  void* fct;
 };
 typedef struct MLprimitive MLprimitive;
+
+
+
 
 /*
 class MLprimitive extends MLfun { 
@@ -198,11 +205,10 @@ MLlist new_MLlist(void* a, int type1, void* b){
   return list;
 }
 
-MLprimitive new_MLprimitive(char* n){
-  MLprimitive primitive;
+MLfun new_MLprimitive(char* n){
+  MLfun primitive;
   primitive.name = n;
-  //if (strcmp(n, "fst") == 0) A VOIR
-  //  primitive.fct = (void*)MLfst_real(MLpair);
+  primitive.isPrimitive = 1;
   return primitive;
 }
 
@@ -266,38 +272,38 @@ MLbool MLfalse(void){
 
 
 //acces aux champs des paires
-MLprimitive MLfst(void){
+MLfun MLfst(void){
   return new_MLprimitive("fst");
 }
 
-MLprimitive MLsnd(void){
+MLfun MLsnd(void){
   return new_MLprimitive("snd");
 }
 
-void* MLfst_real(MLpair p){
-  return p.MLfst;
+void* MLfst_real(MLpair* p){
+  return p->MLfst;
 }
 
-void* MLsnd_real(MLpair p){
-  return p.MLsnd;
+void* MLsnd_real(MLpair* p){
+  return p->MLsnd;
 }
 
 
 //acces aux champs des listes
-MLprimitive MLhd(void){
+MLfun MLhd(void){
   return new_MLprimitive("hd");
 }
 
-MLprimitive MLtl(void){
+MLfun MLtl(void){
   return new_MLprimitive("tl");
 }
 
-void* MLhd_real(MLlist l){
-  return l.MLcar;
+void* MLhd_real(MLlist* l){
+  return l->MLcar;
 }
 
-void* MLtl_real(MLlist l){
-  return l.MLcdr;
+void* MLtl_real(MLlist* l){
+  return l->MLcdr;
 }
 
 MLbool MLequal(void* x, void* y){
@@ -312,6 +318,20 @@ MLunit MLlrp(void){
 
 MLlist MLnil(void){
   return new_MLlist(NULL, 0, NULL);
+}
+
+void* invokePrimitive(MLprimitive p, void* l, char* cd){
+  void (*c)() = NULL;
+  c = &cd;
+  if (strcmp(p.name, "hd")==0) return MLhd_real((MLlist*)l);
+  else if (strcmp(p.name, "tl")==0) return MLtl_real((MLlist*)l);
+  else if (strcmp(p.name, "fst")==0) return MLfst_real((MLpair*)l);
+  else if (strcmp(p.name, "snd")==0) return MLsnd_real((MLpair*)l);
+  else
+  {
+     printf("Unknown primitive %s", p.name);
+     exit(0);
+  }
 }
 
 MLunit MLprint(void* x, int type, int cr){
