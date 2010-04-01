@@ -146,12 +146,21 @@ MLpair new_MLpair(void* a/*, int type1*/, void* b/*, int type2*/){
 MLlist new_MLlist(void* a/*, int type1*/, void* b){
   MLlist list;
   list.id = 6;
-  list.MLcar = a;
+  list.MLcar = malloc(sizeof(a*));
+  MLlist* temp;	MLint* test;
   if (a != NULL)
+  {
     list.type1 = ((MLvalue*)a)->id;
+    printf("Testidlistcar: %d\n", ((MLint*)list.MLcar)->val);
+  }
   else
     list.type1 = 0;
-  list.MLcdr = b;
+  list.MLcdr = &b;
+ temp= (MLlist*)list.MLcdr;
+ if (b == NULL)
+	printf("merde");
+	//test = (MLint*) temp->MLcar; 
+	//printf("Testidlistcar: %d\n", ((MLint*)temp->MLcar)->id);
   return list;
 }
 
@@ -287,6 +296,7 @@ MLunit MLprint(void* x, int type, int cr){
   int type1, type2;
   MLpair* temppair;
   MLlist* templist;
+MLlist* templist2;
   MLfun* tempfun;
   int valint, i;
   double valdouble;
@@ -318,7 +328,7 @@ MLunit MLprint(void* x, int type, int cr){
       tempfun = (MLfun*)x;
       break;
     default:
-	printf("Erreur print! Arret programme\n");
+	printf("Erreur print! Arret programme: %d\n", type);
   }
   switch(type){
     case 1: 
@@ -373,7 +383,7 @@ MLunit MLprint(void* x, int type, int cr){
       printf("]");
       break;
     default:
-      printf("Erreur print! Arret programme\n");
+      printf("Erreur print! Arret programme: %d\n",type);
       exit(1);	
   }
   if (cr)
