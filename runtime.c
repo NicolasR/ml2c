@@ -5,6 +5,7 @@
 struct MLvalue {
   int id;
   void* val;
+  int size;
 };
 typedef struct MLvalue MLvalue;
 
@@ -16,24 +17,28 @@ typedef struct MLunit MLunit;
 struct MLbool {
   int id;
   int val;
+  int size;
 };
 typedef struct MLbool MLbool;
 
 struct MLint {
   int id;
   int val;
+  int size;
 };
 typedef struct MLint MLint;
 
 struct MLdouble {
   int id;
   double val;
+  int size;
 };
 typedef struct MLdouble MLdouble;
 
 struct MLstring {
   int id;
   char* val;
+  int size;
 };
 typedef struct MLstring MLstring;
 
@@ -43,6 +48,7 @@ struct MLpair {
   int type1;
   void* MLsnd;
   int type2;
+  int size;
 };
 typedef struct MLpair MLpair;
 
@@ -52,6 +58,7 @@ struct MLlist {
   void* MLcar;
   int type1;
   void* MLcdr;
+  int size;
 };
 typedef struct MLlist MLlist;
 
@@ -115,6 +122,7 @@ MLint new_MLint(int val){
   MLint integer;
   integer.id = 2;
   integer.val = val;
+  integer.size = sizeof(integer);
   return integer;
 }
 
@@ -146,21 +154,34 @@ MLpair new_MLpair(void* a/*, int type1*/, void* b/*, int type2*/){
 MLlist new_MLlist(void* a/*, int type1*/, void* b){
   MLlist list;
   list.id = 6;
-  list.MLcar = malloc(sizeof(a*));
-  MLlist* temp;	MLint* test;
+  MLvalue* va = (MLvalue*)a;
+  MLvalue* vb = (MLvalue*)b;
   if (a != NULL)
   {
-    list.type1 = ((MLvalue*)a)->id;
-    printf("Testidlistcar: %d\n", ((MLint*)list.MLcar)->val);
+    list.type1 = va->id;
+    printf("[debug]typelistcar: %d\n", list.type1);
+    list.MLcar = malloc(va->size);
+    memcpy(list.MLcar, a, va->size);
+    printf("[debug]car: %d", ((MLint*)list.MLcar)->val);
+    //printf("Testidlistcar: %d\n", ((MLint*)list.MLcar)->val);
   }
   else
+  {
+    printf("[debug]typelistcar: NULL\n");
     list.type1 = 0;
-  list.MLcdr = &b;
- temp= (MLlist*)list.MLcdr;
- if (b == NULL)
-	printf("merde");
+    list.MLcar = NULL;
+  }
+
+  if (b != NULL)
+  {
+    list.MLcdr = malloc(vb->size);
+    memcpy(list.MLcdr, b, vb->size);
+  }
+  else
+     list.MLcdr = NULL;
 	//test = (MLint*) temp->MLcar; 
 	//printf("Testidlistcar: %d\n", ((MLint*)temp->MLcar)->id);
+     list.size = sizeof(list);
   return list;
 }
 
@@ -377,8 +398,7 @@ MLlist* templist2;
       //printf("counterprint: %d", tempfun->MAX);
       for (i=0; i<tempfun->MLcounter; i++)
       {
-	   printf("je passe ici");
-           MLprint(tempfun->MLenv[i], 2, 0);
+           MLprint(tempfun->MLenv[i], ((MLvalue*)tempfun->MLenv[i])->id, 0);
       }
       printf("]");
       break;
