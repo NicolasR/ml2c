@@ -1,26 +1,28 @@
 /**
  *  ftest2.c engendre par ml2c 
  */
-/**
- * 
- */
-
 #include "runtime.c"
+
   MLpair a___1;
   MLpair b___5;
   MLpair p___9;
   MLlist q___13;
   MLbool test___19;
-  MLdouble test2___26;
+  MLdouble test2___26;/**
+ * 
+ */
+
 
 int main(int argc, char* argv) {
+void* (*tabfun[1])(MLfun*, void*);
+tabfun[0] = &invokePrimitive;
 
 { 
   MLint T___2;
   MLint T___3;
   T___2=new_MLint(2);
   T___3=new_MLint(1);
-  a___1=new_MLpair( &T___2, T___2.id, &T___3, T___3.id );
+  a___1=new_MLpair( &T___2, &T___3);
 }
 { 
   MLunit bidon___4;
@@ -32,7 +34,7 @@ int main(int argc, char* argv) {
   MLint T___7;
   T___6=new_MLint(2);
   T___7=new_MLint(1);
-  b___5=new_MLpair( &T___6, T___6.id, &T___7, T___7.id );
+  b___5=new_MLpair( &T___6, &T___7);
 }
 { 
   MLunit bidon___8;
@@ -44,7 +46,7 @@ int main(int argc, char* argv) {
   MLstring T___11;
   T___10=new_MLstring("c");
   T___11=new_MLstring("d");
-  p___9=new_MLpair( &T___10, T___10.id, &T___11, T___11.id );
+  p___9=new_MLpair( &T___10, &T___11);
 }
 { 
   MLunit bidon___12;
@@ -60,9 +62,9 @@ int main(int argc, char* argv) {
     MLlist T___17;
     T___16=new_MLdouble(2.2);
     T___17=MLnil();
-    T___15=new_MLlist( &T___16, T___16.id, &T___17);
+    T___15=new_MLlist( &T___16, &T___17);
   }
-  q___13=new_MLlist( &T___14, T___14.id, &T___15);
+  q___13=new_MLlist( &T___14, &T___15);
 }
 { 
   MLunit bidon___18;
@@ -99,9 +101,9 @@ int main(int argc, char* argv) {
 { 
   MLfun T___27;
   MLlist T___28;
-  T___27=MLhd;
+  T___27=MLhd();
   T___28=q___13;
-  test2___26=invoke0( &T___27, &T___28);
+  test2___26=*(MLdouble*)(*(tabfun[T___27.number]))( &T___27, &T___28);
 }
 { 
   MLunit bidon___29;

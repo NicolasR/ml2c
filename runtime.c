@@ -5,10 +5,6 @@
 struct MLvalue {
   int id;
   void* val;
-/*  void* MLcar;
-  void* MLcdr;
-  void* MLfst;
-  void* MLsnd;*/
 };
 typedef struct MLvalue MLvalue;
 
@@ -72,7 +68,7 @@ struct MLfun {
 typedef struct MLfun MLfun;
 
 MLfun new_fun(int n, int funnumber){
-  MLfun function;// = malloc(sizeof *function + sizeof(void*[n]));
+  MLfun function;
   function.id = 666;
   function.isPrimitive = 0;
   function.number = funnumber;
@@ -84,65 +80,16 @@ MLfun new_fun(int n, int funnumber){
 
 void MLaddenv(void** O_env, void* a, MLfun* func){
   int i=0;
-  void** MLenv = malloc(sizeof(void*)*(func->size+1));
-  for (i; i< func->MLcounter; i++){
-    MLenv[i]=O_env[i];
-  }
-  MLenv[func->MLcounter]=a;
-  func->MLcounter++;
+  func->MLenv = (void**)realloc(func->MLenv, sizeof(func->MLenv)*(func->MLcounter));
+  func->MLenv[func->MLcounter] = a;
 }
 
-/*
-astract class MLfun extends MLvalue
-{
-  public int MLcounter;
-  protected MLvalue[] MLenv;
-
-  MLfun(){MLcounter=0;}
-  MLfun(int n){MLcounter=0;MLenv = new MLvalue[n];}
-
-  public  void  MLaddenv(MLvalue []O_env,MLvalue a)
-   { for (int i=0; i< MLcounter; i++) {MLenv[i]=O_env[i];}
-     MLenv[MLcounter]=a;MLcounter++;}
-
- abstract public MLvalue invoke(MLvalue x);
-
-  public void print(){
-     System.out.print("<fun> [");
-     for (int i=0; i< MLcounter; i++)
-           MLenv[i].print();
-     System.out.print("]");
-  }
-
-}
-*/
-
-struct MLprimitive {
+/*struct MLprimitive {
   int id;
   char* name;
 };
-typedef struct MLprimitive MLprimitive;
+typedef struct MLprimitive MLprimitive;*/
 
-
-
-
-/*
-class MLprimitive extends MLfun { 
-
-  String name="";
-
-  MLprimitive(String n){name=n;}
-
-  public MLvalue invoke(MLvalue l) {
-    if (name.equals("hd")) return MLruntime.MLhd_real((MLlist)l);
-    else if (name.equals("tl")) return MLruntime.MLtl_real((MLlist)l);
-    else if (name.equals("fst")) return MLruntime.MLfst_real((MLpair)l);
-    else if (name.equals("snd")) return MLruntime.MLsnd_real((MLpair)l);
-    else {System.err.println("Unknown primitive "+name); return l;}
-  } 
-
-}
-*/
 
 //Fonctions
 
@@ -186,21 +133,24 @@ MLstring new_MLstring(char* s){
   return string;
 }
 
-MLpair new_MLpair(void* a, int type1, void* b, int type2){
+MLpair new_MLpair(void* a/*, int type1*/, void* b/*, int type2*/){
   MLpair pair;
   pair.id = 5;
   pair.MLfst = a;
-  pair.type1 = type1;
+  pair.type1 = ((MLvalue*)a)->id;
   pair.MLsnd = b;
-  pair.type2 = type2;
+  pair.type2 = ((MLvalue*)b)->id;
   return pair;
 }
 
-MLlist new_MLlist(void* a, int type1, void* b){
+MLlist new_MLlist(void* a/*, int type1*/, void* b){
   MLlist list;
   list.id = 6;
   list.MLcar = a;
-  list.type1 = type1;
+  if (a != NULL)
+    list.type1 = ((MLvalue*)a)->id;
+  else
+    list.type1 = 0;
   list.MLcdr = b;
   return list;
 }
@@ -209,6 +159,7 @@ MLfun new_MLprimitive(char* n){
   MLfun primitive;
   primitive.name = n;
   primitive.isPrimitive = 1;
+  primitive.number = 0;
   return primitive;
 }
 
@@ -307,7 +258,7 @@ void* MLtl_real(MLlist* l){
 }
 
 MLbool MLequal(void* x, void* y){
-  if (((MLvalue*)x)->val == ((MLvalue*)y)->val)
+  if (((MLbool*)x)->val == ((MLbool*)y)->val)
     return new_MLbool(1);
   return new_MLbool(0);
 }
@@ -317,20 +268,18 @@ MLunit MLlrp(void){
 }
 
 MLlist MLnil(void){
-  return new_MLlist(NULL, 0, NULL);
+  return new_MLlist(NULL, NULL);
 }
 
-void* invokePrimitive(MLprimitive p, void* l, char* cd){
-  void (*c)() = NULL;
-  c = &cd;
-  if (strcmp(p.name, "hd")==0) return MLhd_real((MLlist*)l);
-  else if (strcmp(p.name, "tl")==0) return MLtl_real((MLlist*)l);
-  else if (strcmp(p.name, "fst")==0) return MLfst_real((MLpair*)l);
-  else if (strcmp(p.name, "snd")==0) return MLsnd_real((MLpair*)l);
+void* invokePrimitive(MLfun* primitive, void* MLparam){
+  if (strcmp(primitive->name, "hd")==0) return MLhd_real((MLlist*)MLparam);
+  else if (strcmp(primitive->name, "tl")==0) return MLtl_real((MLlist*)MLparam);
+  else if (strcmp(primitive->name, "fst")==0) return MLfst_real((MLpair*)MLparam);
+  else if (strcmp(primitive->name, "snd")==0) return MLsnd_real((MLpair*)MLparam);
   else
   {
-     printf("Unknown primitive %s", p.name);
-     exit(0);
+     printf("Unknown primitive %s", primitive->name);
+     //exit(0);
   }
 }
 
@@ -338,10 +287,11 @@ MLunit MLprint(void* x, int type, int cr){
   int type1, type2;
   MLpair* temppair;
   MLlist* templist;
-  int valint;
+  MLfun* tempfun;
+  int valint, i;
   double valdouble;
   char* s;
-//printf("type: %d\n", type);
+//printf("[debug]type: %d\n", type);
   switch(type){
     case 1:
       valint = ((MLbool*)x)->val;
@@ -363,6 +313,9 @@ MLunit MLprint(void* x, int type, int cr){
     case 6:
       templist = (MLlist*)x;
       type1 = templist->type1;
+      break;
+    case 666:
+      tempfun = (MLfun*)x;
       break;
     default:
 	printf("Erreur print! Arret programme\n");
@@ -407,6 +360,17 @@ MLunit MLprint(void* x, int type, int cr){
 	printf("::");
 	MLprint(templist->MLcdr,6, 0);
       }
+      break;
+    case 666:
+	//printf("debug: liste\n");
+      printf("<fun> [");
+      //printf("counterprint: %d", tempfun->MAX);
+      for (i=0; i<tempfun->MLcounter; i++)
+      {
+	   printf("je passe ici");
+           MLprint(tempfun->MLenv[i], 2, 0);
+      }
+      printf("]");
       break;
     default:
       printf("Erreur print! Arret programme\n");

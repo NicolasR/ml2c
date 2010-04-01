@@ -112,7 +112,7 @@ let rec translate_expr (gamma,fr,sd,t)  e  = match e with
                  let w = 
                  if (List.mem_assoc v !initial_trans_env) &&
                     (is_fun t)
-                 then (!module_name)^"."^w
+                 then (*(!module_name)^"."^*)w (*Suppression du nom du module *)
                  else w
                  in
                  instr_of_expr (fr,sd) (VAR(w , li_type_of_ml_type t))

@@ -24,10 +24,13 @@ open Env_typeur;;
 open Env_trans;;
 open Langinter;;
 
-let ifuncn = ref 0
-let ifuncn2 = ref 0
+let ifuncn = ref 1
+let ifuncn2 = ref 1
 let needtocast = ref []
 let funs = ref []
+let isInvokeReal = ref false
+let isReturn = ref false
+
 (* des symboles globaux bien utiles par la suite *)
 
 let compiler_name = ref "ml2c";;
@@ -58,10 +61,10 @@ let get_param_type fun_t =  match fun_t with
 
 initial_special_env := 
  List.map build [
-      "hd","MLhd";
-      "tl","MLtl";
-      "fst","MLfst";
-      "snd","MLsnd"
+      "hd","MLhd()";
+      "tl","MLtl()";
+      "fst","MLfst()";
+      "snd","MLsnd()"
 ];;
 
 
@@ -103,18 +106,53 @@ let out_start s nb = out ("\n"^(String.sub shift_string 0 (2*nb))^s);;
 let out_end s nb = out ("\n"^(String.sub shift_string 0 nb)^"}\n");;
 let out_line s = out (s^"\n");;
 
-let out_before (fr,sd,nb) = 
+let out_before (fr,sd,nb,tr,v,isPrim) = 
   if sd<>"" then out_start (sd^"=") nb
-  else if fr then out_start ("return ") nb;;
+  else if fr then
+    begin 
+      if (not isPrim) then
+      begin
+	out_start ("void* return_value;") nb;
+      	out_start ("return_value = &") nb
+      	(*out_start ("return return_value;") nb;*)
+      end
+      else
+      begin
+	out_start ("void* return_value;") nb;
+	out_start (tr^"prim_value = ") nb
+      end;
+    end;;
 
 
-let out_after  (fr,sd,nb) = 
+let out_after  (fr,sd,nb,tr,isPrim) = 
   if sd<>"" then 
   begin
       out ";";
-      if fr then out (("return "^sd^";"))
+      if fr then 
+      begin
+	(*if (not isPrim) then*)
+	(*  if (not isPrim) then*)
+	    out ("return "^sd^";")
+	(*  else
+	  begin
+	    out_line("return_value = &prim_value");
+	    out("return return_value;");
+	  end*)
+	(*else
+	begin
+	  out_line(tr^"prim_value;");
+	  out_line("return_value = &prim_value");
+	  out("return return_value;");
+	end*)
+      end
   end
-  else if fr then out ";";;
+  else if fr then 
+  begin
+    out ";";
+    if (isPrim) then
+    	out_start ("return_value = &prim_value;") nb;
+    out_start ("return return_value;") nb;
+  end;;
 
 
 (* des fonctions utilitaires pour commenter un peu la production *)
@@ -172,7 +210,7 @@ let string_of_const_type ct = match ct with
  
 let rec string_of_type typ = match typ with 
   CONSTTYPE t -> string_of_const_type t
-| ALPHA    ->  "MLvalue " 
+| ALPHA    ->  (*"MLvalue "*)"void* " 
 | PAIRTYPE -> "MLpair "
 | LISTTYPE -> "MLlist "
 | FUNTYPE  -> "MLfun "
@@ -183,7 +221,7 @@ let rec string_of_type typ = match typ with
 let prod_global_var instr = match instr with
   VAR (v,t) -> out_start ((string_of_type t)^v^";") 1 
 | FUNCTION (ns,t1,ar,(p,t2), instr) ->
-    out_start ("MLfun "(*"fun_"^ns^" "*)^ns^"= new_MLfun_"^ns^"("^(string_of_int ar)^", "^(string_of_int !ifuncn2)^");") 1;
+    out_start ("MLfun "^ns^"= {666, \"\", 0, "^(string_of_int !ifuncn2)^", 0, 0, "^(string_of_int ar)^", NULL};") 1;
     ifuncn2 := !ifuncn2 + 1
 | _ -> ()
 ;;
@@ -210,19 +248,30 @@ let rec prod_local_var (fr,sd,nb) (v,t) =
   out_start ((*"MLvalue "*)(string_of_type t)^v^";") nb;;
 
 let rec prod_instr (fr,sd,nb) instr  = match instr with 
-  CONST c -> out_before (fr,sd,nb);
+  CONST c -> 
+	     if c = EMPTYLIST then
+	     	out_before (fr,sd,nb,"MLlist ","", true)
+	     else
+	     	out_before (fr,sd,nb,"","", false);		
              prod_const c;
-             out_after (fr,sd,nb)
+	     if c = EMPTYLIST then
+             	out_after (fr,sd,nb,"",true)
+	     else
+		out_after (fr,sd,nb,"",false)
 | VAR (v,t) 
           -> if (nb = 0) && ( sd = "") then ()
              else 
-             begin 
-               out_before (fr,sd,nb);
-		(* On cast les variables issues de fonctions avec le bon type*)
+             begin
+	       let var_type = string_of_type t in
+               out_before (fr,sd,nb,var_type,v, false);
+	       (*if (!isReturn = false) then*)
+	       begin
+		(* On cast les variables quand c'est nécessaire *)
 		if (List.exists (fun x -> x = v) !needtocast) then
-		  out ("("^(string_of_type t)^")");               
+		  out ("*("^var_type^"*)");               
 		out v;
-               out_after (fr,sd,nb)           
+               out_after (fr,sd,nb,var_type,false)
+	       end           
              end
 | IF(i1,i2,i3) -> 
               out_start "if (" nb;
@@ -234,7 +283,9 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
               prod_instr (fr,sd,nb+1) i2 ;
               out_start "else" (nb);
               prod_instr (fr,sd,nb+1) i3
-| RETURN i -> prod_instr (true,"",nb) i;
+| RETURN i -> isReturn := true;
+	      prod_instr (true,"",nb) i;
+	      isReturn := false;
 | AFFECT (v,i) -> prod_instr (false,v,nb) i
 | BLOCK(l,i) -> out_start "{ " nb;
                   List.iter (fun (v,t,i) -> prod_local_var (false,"",nb+1) 
@@ -244,25 +295,32 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
                 out_start "}" nb
              
 | APPLY(i1,i2) -> 
-   out_before(fr,sd,nb);
+   out_before(fr,sd,nb,"","", false);
      (*out ("((MLfun)");
      prod_instr (false,"",nb) i1;
      out ")";
      out ".invoke(";*)
-     out ("invoke"^(string_of_int !ifuncn)^"( &");
+     if (!isInvokeReal) then
+	out ("invoke( &")
+     else
+     begin
+     	out ("(*(tabfun[");
+	prod_instr (false,"",nb) i1;
+	out (".number]))( &");
+     end;
      prod_instr (false,"",nb) i1;
      out ", &";
      prod_instr (false,"",nb) i2;     
      out")";
-   out_after(fr,sd,nb)
+   out_after(fr,sd,nb,"",false)
 | PRIM ((name,typ),instrl) ->
    let ltp = get_param_type instrl in 
-   out_before (fr,sd,nb);
    (*out (name^"( ("^(string_of_type (List.hd ltp))^")");*)
    begin
      match name with (* A COMPLETER??? *)
        | "MLprint" ->
 	   begin
+	     out_before (fr,sd,nb,"","", false);
 	     out (name^"( &");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", &");
@@ -271,46 +329,91 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
 	     out(", ");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
 	     out (".id, 1)") ;
-	     out_after(fr,sd,nb)
+	     out_after(fr,sd,nb,"",false)
 	   end
        | "new_MLpair" -> 
 	  begin
+	     out_before (fr,sd,nb,"MLpair ","", true);
 	     out (name^"( &");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     out (", ");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     out (".id");
+	     (*out (", ");*)
+	     (*prod_instr (false,"",nb+1) (List.hd instrl);
+	     out (".id");*)
 	     List.iter2 (fun x y -> out (", &");
 			   prod_instr (false,"",nb+1) x) 
                (List.tl instrl) (List.tl ltp);
-	     out (", ");
-	     List.iter2 (fun x y -> prod_instr (false,"",nb+1) x) 
-               (List.tl instrl) (List.tl ltp);
-	     out (".id )") ;
-	     out_after(fr,sd,nb)
+	     (*out (", ");*)
+	     (*List.iter2 (fun x y -> prod_instr (false,"",nb+1) x) 
+               (List.tl instrl) (List.tl ltp);*)
+	     (*out (".id )") ;*)out (")") ;
+	     out_after(fr,sd,nb,"MLpair ",true)
 	   end
        | "new_MLlist" ->
 	   begin
+	     out_before (fr,sd,nb,"MLlist ","", true);
 	     out (name^"( &");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     out (", ");
+	     (*out (", ");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     out (".id");
+	     out (".id");*)
 	     List.iter2 (fun x y -> out (", &");
 			   prod_instr (false,"",nb+1) x) 
                (List.tl instrl) (List.tl ltp);
 	     out (")");
-	     out_after(fr,sd,nb)
+	     out_after(fr,sd,nb,"MLlist ",true)
 	   end
-       | _ ->
+       | "MLgtint"
+       | "MLgeint"
+       | "MLltint"
+       | "MLleint" ->
 	   begin
+	     (*out ("MLbool prim_value = "^name^"( &");*)
+	     out_before (fr,sd,nb,"MLbool ","", true);
+	     out (name^"( ");
+	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     List.iter2 (fun x y -> out (", ");
+			   prod_instr (false,"",nb+1) x) 
+               (List.tl instrl) (List.tl ltp);
+	     out ")" ;
+	     out_after(fr,sd,nb,"MLbool ",true);
+	   end
+       | "MLequal" ->
+	   begin
+	     (*out ("MLbool prim_value = "^name^"( &");*)
+	     out_before (fr,sd,nb,"MLbool ","", true);
 	     out (name^"( &");
 	     prod_instr (false,"",nb+1) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", &");
 			   prod_instr (false,"",nb+1) x) 
                (List.tl instrl) (List.tl ltp);
 	     out ")" ;
-	     out_after(fr,sd,nb)
+	     out_after(fr,sd,nb,"MLbool ",true);
+	   end
+
+       | "MLaddint"
+       | "MLsubint"
+       | "MLmulint"
+       | "MLdivint" ->
+	   begin
+	     (*out ("MLint prim_value = "^name^"( &");*)
+	     out_before (fr,sd,nb,"MLint ","", true);
+ 	     out (name^"( ");
+	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     List.iter2 (fun x y -> out (", ");
+			   prod_instr (false,"",nb+1) x) 
+               (List.tl instrl) (List.tl ltp);
+	     out ")" ;
+	     out_after(fr,sd,nb,"MLint ",true);
+	   end
+       | _ ->
+	   begin
+	     out (name^"( ");
+	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     List.iter2 (fun x y -> out (", ");
+			   prod_instr (false,"",nb+1) x) 
+               (List.tl instrl) (List.tl ltp);
+	     out ")" ;
+	     out_after(fr,sd,nb,"",true)
 	   end
    end
 
@@ -327,40 +430,45 @@ let fun_header fn cn  =
 ;;
 
 let prod_invoke cn  ar = 
+  let fnumber = (string_of_int !ifuncn) in
   List.iter out_line 
-     ["  invoke_"^(string_of_int !ifuncn)^"(MLfun* func, void* MLparam){";
+     ["void* invokef"^fnumber^"(MLfun* func, void* MLparam){";
       "    func->MAX = "^(string_of_int ar)^";";
-      "    if (func->MLcounter == (func->MAX-1)) {"
+      "    if (func->MLcounter == (func->MAX-1)) {";
+      "	      void* (*f)(MLfun*, void*) = &invokef"^fnumber^";";
      ];
 
-  out ("      return invoke_real"^(string_of_int !ifuncn)^"(");
+  out ("      return invoke_real"^fnumber^"(");
   for i=0 to ar-2 do 
     out ("func->MLenv["^(string_of_int i)^"], ")
   done;
-  out_line "MLparam);";     
+  out_line "MLparam, f);";     
 
   List.iter out_line 
      ["    }";
       "    else {";
-      "      func->MLcounter = func->MLcounter + 1;";
-      "      MLaddenv(func->MLenv, MLparam, &func); return func;";
+      "      MLaddenv(func->MLenv, MLparam, func);";
+      "      func->MLcounter = func->MLcounter + 1;
+	     return func;";
       "    }";
       "  }"
-      ]
+      ];
+  funs := List.append !funs (("invokef"^fnumber)::[]);
+  ifuncn := !ifuncn + 1
 ;;
 
 let prod_invoke_fun cn ar t lp instr = 
-  funs := ("invoke_real"^(string_of_int !ifuncn))::!funs;
+
   out_start ("void* invoke_real"^(string_of_int !ifuncn)^"(") 1;
   needtocast := (List.hd lp)::!needtocast;
   out ("void* "^(List.hd lp));
   List.iter (fun x -> out (", void* "^x); needtocast := x::!needtocast;) (List.tl lp);
-  out_line ") {";
+  out_line ", void* (*invokef)(MLfun*, void*)) {";
+  isInvokeReal := true;
   prod_instr (true,"",2) instr;
-  
+  isInvokeReal := false;
   out_start "}" 1;
   out_line "";
-    ifuncn := !ifuncn + 1;
 ;;
 
 let prod_fun instr = match instr with 
@@ -408,24 +516,26 @@ let prod_file filename ast_li =
   module_name:=filename;
   try 
     header_main  filename;
+	out_line("#include \"runtime.c\"");
     header_one  filename;
+    prod_two  ast_li; (* On veut que les vars globales soient tout en haut *)
     prod_one  ast_li;
 
-    (**DECLARATION DE TABLEAU *)
-    out ("void** tabfun = (void**)malloc(sizeof(void*)*");
-    out (string_of_int (List.length !funs));
-    out_line (");");
-    let i = ref 0 in
+    
+
+    footer_one  filename;
+    header_two  filename;
+
+    footer_two  filename;
+    header_three  filename;
+(**DECLARATION DE TABLEAU *)
+    out_line ("void* (*tabfun["^(string_of_int ((List.length !funs)+1))^"])(MLfun*, void*);");
+    out_line ("tabfun[0] = &invokePrimitive;");
+    let i = ref 1 in
     List.iter (fun x -> 
 	out ("tabfun["^(string_of_int !i)^"]");
 	out_line (" = &"^x^";");
 	i := !i+1) !funs;
-
-    footer_one  filename;
-    header_two  filename;
-    prod_two  ast_li;
-    footer_two  filename;
-    header_three  filename;
     prod_three  ast_li;
     footer_three  filename;
     footer_main  filename;
