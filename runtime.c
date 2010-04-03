@@ -168,6 +168,7 @@ MLpair new_MLpair(void* a/*, int type1*/, void* b/*, int type2*/){
   pair.MLsnd = malloc(vb->size);
   pair.type2 = ((MLvalue*)b)->id;
   memcpy(pair.MLsnd, b, vb->size);
+  pair.size = sizeof(pair);
   return pair;
 }
 
