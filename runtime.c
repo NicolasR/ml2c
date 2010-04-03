@@ -80,15 +80,31 @@ MLfun new_fun(int n, int funnumber){
   function.isPrimitive = 0;
   function.number = funnumber;
   function.MLcounter = 0;
-  function.size = 0;
   function.MLenv = (void**)malloc(sizeof(void*)*n);
+  function.size = sizeof(function);
   return function;
 }
 
 void MLaddenv(void** O_env, void* a, MLfun* func){
   int i=0;
-  func->MLenv = (void**)realloc(func->MLenv, sizeof(func->MLenv)*(func->MLcounter));
-  func->MLenv[func->MLcounter] = a;
+  int size;
+  if (((MLvalue*)a)->id == 666)
+  {
+    //printf("Oui\n");
+    //printf("%d\n", ((MLfun*)a)->id);
+    size = ((MLfun*)a)->size;
+  }
+  else
+    size =((MLvalue*)a)->size;
+  //printf("[debug]size: %d\n", size);
+  /*if (((MLvalue*)a)->id == 2)
+  	printf("addenv: %d\n", ((MLint*)a)->val);*/
+  func->MLenv = (void**)realloc(func->MLenv, /*sizeof(func->MLenv)**/(func->MLcounter+1));
+  func->MLenv[func->MLcounter] = malloc(size);
+  memcpy(func->MLenv[func->MLcounter], a, size);
+  /*if (((MLvalue*)a)->id == 2)
+	printf("verif addenv: %d\n", ((MLint*)func->MLenv[func->MLcounter])->val);*/
+  func->size = sizeof(*func);
 }
 
 /*struct MLprimitive {
@@ -144,10 +160,14 @@ MLstring new_MLstring(char* s){
 MLpair new_MLpair(void* a/*, int type1*/, void* b/*, int type2*/){
   MLpair pair;
   pair.id = 5;
-  pair.MLfst = a;
+  MLvalue* va = (MLvalue*)a;
+  MLvalue* vb = (MLvalue*)b;
+  pair.MLfst = malloc(va->size);
+  memcpy(pair.MLfst, a, va->size);
   pair.type1 = ((MLvalue*)a)->id;
-  pair.MLsnd = b;
+  pair.MLsnd = malloc(vb->size);
   pair.type2 = ((MLvalue*)b)->id;
+  memcpy(pair.MLsnd, b, vb->size);
   return pair;
 }
 
@@ -155,30 +175,35 @@ MLlist new_MLlist(void* a/*, int type1*/, void* b){
   MLlist list;
   list.id = 6;
   MLvalue* va = (MLvalue*)a;
-  MLvalue* vb = (MLvalue*)b;
-  if (a != NULL)
+  MLlist* vb = (MLlist*)b;
+  if (a != NULL && va->id != 0)
   {
+    
+    //printf("[debug]id_new_list_a: %d\n", va->id);
+    fflush(stdout);
     list.type1 = va->id;
-    printf("[debug]typelistcar: %d\n", list.type1);
+    //printf("[debug]typelistcar: %d\n", list.type1);
     list.MLcar = malloc(va->size);
     memcpy(list.MLcar, a, va->size);
-    printf("[debug]car: %d", ((MLint*)list.MLcar)->val);
+    //printf("[debug]car: %d", ((MLint*)list.MLcar)->val);
     //printf("Testidlistcar: %d\n", ((MLint*)list.MLcar)->val);
   }
   else
   {
-    printf("[debug]typelistcar: NULL\n");
+    //printf("[debug]typelistcar: NULL\n");
     list.type1 = 0;
     list.MLcar = NULL;
   }
 
-  if (b != NULL)
+  if (b != NULL && vb->id != 0)
   {
     list.MLcdr = malloc(vb->size);
     memcpy(list.MLcdr, b, vb->size);
   }
   else
+  {
      list.MLcdr = NULL;
+  }
 	//test = (MLint*) temp->MLcar; 
 	//printf("Testidlistcar: %d\n", ((MLint*)temp->MLcar)->id);
      list.size = sizeof(list);
@@ -204,7 +229,7 @@ MLint MLsubint(MLint x, MLint y){
 }
 
 MLint MLmulint(MLint x, MLint y){
-  return new_MLint(x.val - y.val);
+  return new_MLint(x.val * y.val);
 }
 
 MLint MLdivint(MLint x, MLint y){
