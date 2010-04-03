@@ -320,8 +320,16 @@ void* invokef6(MLfun* func, void* MLparam){
               }
 	      void* temp;
               temp=(*tabfun[T___46.number])( &T___46, T___47);
-	      T___45 = malloc(((MLvalue*)temp)->size);
-	      memcpy(T___45, temp, ((MLvalue*)temp)->size);
+	      if (((MLvalue*)temp)->id == 666)
+              {
+	      	T___45 = malloc(((MLfun*)temp)->size);
+	      	memcpy(T___45, temp, ((MLfun*)temp)->size);
+  	      }
+	      else
+	      {
+		T___45 = malloc(((MLvalue*)temp)->size);
+	      	memcpy(T___45, temp, ((MLvalue*)temp)->size);
+              }
             }
             { 
               MLfun T___51;
@@ -410,8 +418,16 @@ void* invokef7(MLfun* func, void* MLparam){
                 T___68=*(MLlist*)(*tabfun[T___69.number])( &T___69, &T___70);
               }
 	      void* temp = (*tabfun[T___67.number])( &T___67, &T___68);
-              T___66= malloc(((MLvalue*)temp)->size);
-	      memcpy(T___66, temp, ((MLvalue*)temp)->size);
+	      if (((MLvalue*)temp)->id == 666)
+	      {
+              	T___66= malloc(((MLfun*)temp)->size);
+	      	memcpy(T___66, temp, ((MLfun*)temp)->size);
+   	      }
+	      else
+	      {
+              	T___66= malloc(((MLvalue*)temp)->size);
+	      	memcpy(T___66, temp, ((MLvalue*)temp)->size);
+   	      }
             }
             T___64=*(MLlist*)(*tabfun[T___65.number])( &T___65, &T___66);
           }
@@ -591,8 +607,16 @@ void* invokef10(MLfun* func, void* MLparam){
               }
               T___138=*(void* *)x___128;
 	      void* temp = (*tabfun[T___135.number])( &T___135, &T___138);
-	      T___134 = malloc( ((MLvalue*)temp)->size);
-	      memcpy(T___134, temp, ((MLvalue*)temp)->size);
+	      if (((MLvalue*)temp)->id == 666)
+	      {
+	      	T___134 = malloc( ((MLfun*)temp)->size);
+	      	memcpy(T___134, temp, ((MLfun*)temp)->size);
+	      }
+	      else
+	      {
+	      	T___134 = malloc( ((MLvalue*)temp)->size);
+	      	memcpy(T___134, temp, ((MLvalue*)temp)->size);
+	      }
             }
             { 
               MLfun T___140;
@@ -610,10 +634,17 @@ void* invokef10(MLfun* func, void* MLparam){
                 }
                 T___140=*(MLfun*)(*tabfun[T___141.number])( &T___141, &T___142);
               }
-void* temp = x___128;
-
-              T___145=malloc(((MLvalue*)temp)->size);
-   	      memcpy(T___145, temp, ((MLvalue*)temp)->size);
+	      void* temp = x___128;
+	      if (((MLvalue*)temp)->id == 666)
+	      {
+              	T___145=malloc(((MLfun*)temp)->size);
+   	      	memcpy(T___145, temp, ((MLfun*)temp)->size);
+	      }
+	      else
+	      {
+              	T___145=malloc(((MLvalue*)temp)->size);
+   	      	memcpy(T___145, temp, ((MLvalue*)temp)->size);
+	      }
               T___139=*(MLlist*)(*tabfun[T___140.number])( &T___140, &T___145);
             }
             T___133=new_MLlist( &T___134, &T___139);

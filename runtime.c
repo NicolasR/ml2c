@@ -104,7 +104,7 @@ void MLaddenv(void** O_env, void* a, MLfun* func){
   memcpy(func->MLenv[func->MLcounter], a, size);
   /*if (((MLvalue*)a)->id == 2)
 	printf("verif addenv: %d\n", ((MLint*)func->MLenv[func->MLcounter])->val);*/
-  func->size = sizeof(*func);
+  //func->size +=1+size;
 }
 
 /*struct MLprimitive {
@@ -175,16 +175,25 @@ MLlist new_MLlist(void* a/*, int type1*/, void* b){
   MLlist list;
   list.id = 6;
   MLvalue* va = (MLvalue*)a;
+  MLfun* va2 = (MLfun*)a;
   MLlist* vb = (MLlist*)b;
   if (a != NULL && va->id != 0)
   {
     
     //printf("[debug]id_new_list_a: %d\n", va->id);
-    fflush(stdout);
+    //fflush(stdout);
     list.type1 = va->id;
     //printf("[debug]typelistcar: %d\n", list.type1);
-    list.MLcar = malloc(va->size);
-    memcpy(list.MLcar, a, va->size);
+    if (va->id == 666)
+    {
+      list.MLcar = malloc(va2->size);
+      memcpy(list.MLcar, a, va2->size);
+    }
+    else
+    {
+      list.MLcar = malloc(va->size);
+      memcpy(list.MLcar, a, va->size);
+    }
     //printf("[debug]car: %d", ((MLint*)list.MLcar)->val);
     //printf("Testidlistcar: %d\n", ((MLint*)list.MLcar)->val);
   }
