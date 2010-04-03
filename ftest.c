@@ -120,9 +120,20 @@ void* invokef2(MLfun* func, void* MLparam){
       void* T___15;
       MLlist T___16;
       T___15=*(void* *)x___13;
+      void* temp = x___13;
+      if (((MLvalue*)temp)->id == 666)
+      {
+        T___15= malloc(((MLfun*)temp)->size);
+	memcpy(T___15, temp, ((MLfun*)temp)->size);
+      }
+      else
+      {
+      	T___15= malloc(((MLvalue*)temp)->size);
+      	memcpy(T___15, temp, ((MLvalue*)temp)->size);
+      }
       T___16=*(MLlist *)y___14;
       void* return_value;
-      MLlist prim_value = new_MLlist( &T___15, &T___16);
+      MLlist prim_value = new_MLlist( T___15, &T___16);
       return_value = &prim_value;
       return return_value;
     }
@@ -159,7 +170,17 @@ void* invokef3(MLfun* func, void* MLparam){
         MLlist T___21;
         T___20=MLhd();
         T___21=*(MLlist *)x___18;
-        T___19=(*tabfun[T___20.number])( &T___20, &T___21);
+	void* temp = (*tabfun[T___20.number])( &T___20, &T___21);
+        if (((MLvalue*)temp)->id == 666)
+        {
+          T___19= malloc(((MLfun*)temp)->size);
+	  memcpy(T___19, temp, ((MLfun*)temp)->size);
+        }
+        else
+        {
+      	  T___19= malloc(((MLvalue*)temp)->size);
+      	  memcpy(T___19, temp, ((MLvalue*)temp)->size);
+        }
       }
       { 
         MLfun T___23;
@@ -169,7 +190,7 @@ void* invokef3(MLfun* func, void* MLparam){
         T___22=*(MLlist*)(*tabfun[T___23.number])( &T___23, &T___24);
       }
       void* return_value;
-      MLpair prim_value = new_MLpair( &T___19, &T___22);
+      MLpair prim_value = new_MLpair( T___19, &T___22);
       return_value = &prim_value;
       return return_value;
     }
@@ -250,9 +271,19 @@ void* invokef5(MLfun* func, void* MLparam){
           { 
             void* T___35;
             MLlist T___36;
-            T___35=*(void* *)x___29;
+            void* temp = x___29;
+            if (((MLvalue*)temp)->id == 666)
+            {
+              T___35= malloc(((MLfun*)temp)->size);
+	      memcpy(T___35, temp, ((MLfun*)temp)->size);
+            }
+            else
+            {
+      	      T___35= malloc(((MLvalue*)temp)->size);
+      	      memcpy(T___35, temp, ((MLvalue*)temp)->size);
+            }
             T___36=MLnil();
-            T___34=new_MLlist( &T___35, &T___36);
+            T___34=new_MLlist( T___35, &T___36);
           }
           void* return_value;
           return_value = &T___34;
@@ -429,7 +460,7 @@ void* invokef7(MLfun* func, void* MLparam){
 	      	memcpy(T___66, temp, ((MLvalue*)temp)->size);
    	      }
             }
-            T___64=*(MLlist*)(*tabfun[T___65.number])( &T___65, &T___66);
+            T___64=*(MLlist*)(*tabfun[T___65.number])( &T___65, T___66);
           }
           void* return_value;
           return_value = &T___64;
@@ -605,8 +636,18 @@ void* invokef10(MLfun* func, void* MLparam){
                 T___137=*(MLlist *)l___127;
                 T___135=*(MLfun*)(*tabfun[T___136.number])( &T___136, &T___137);
               }
-              T___138=*(void* *)x___128;
-	      void* temp = (*tabfun[T___135.number])( &T___135, &T___138);
+	      void* temp = x___128;
+	      if (((MLvalue*)temp)->id == 666)
+	      {
+	      	T___138 = malloc( ((MLfun*)temp)->size);
+	      	memcpy(T___138, temp, ((MLfun*)temp)->size);
+	      }
+	      else
+	      {
+	      	T___138 = malloc( ((MLvalue*)temp)->size);
+	      	memcpy(T___138, temp, ((MLvalue*)temp)->size);
+	      }
+	      temp = (*tabfun[T___135.number])( &T___135, T___138);
 	      if (((MLvalue*)temp)->id == 666)
 	      {
 	      	T___134 = malloc( ((MLfun*)temp)->size);
@@ -645,9 +686,9 @@ void* invokef10(MLfun* func, void* MLparam){
               	T___145=malloc(((MLvalue*)temp)->size);
    	      	memcpy(T___145, temp, ((MLvalue*)temp)->size);
 	      }
-              T___139=*(MLlist*)(*tabfun[T___140.number])( &T___140, &T___145);
+              T___139=*(MLlist*)(*tabfun[T___140.number])( &T___140, T___145);
             }
-            T___133=new_MLlist( &T___134, &T___139);
+            T___133=new_MLlist( T___134, &T___139);
           }
           void* return_value;
           return_value = &T___133;
