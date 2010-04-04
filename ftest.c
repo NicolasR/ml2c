@@ -25,9 +25,8 @@ void* (**tabfun)(MLfun*, void*);
   MLlist value___146;
 
 /**
- *  de'claration de la fonction null___1
- *    vue comme la classe : MLfun_null___1
- */ 
+ *  de'claration de la fonction MLfun_null___1
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real1(void* l___2) {
 
@@ -59,6 +58,12 @@ void* (**tabfun)(MLfun*, void*);
     }
   }
 
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
+
 void* invokef1(MLfun* func, void* MLparam){
     func->MAX = 1;
     if (func->MLcounter == (func->MAX-1)) {
@@ -75,9 +80,8 @@ void* invokef1(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction g___8
- *    vue comme la classe : MLfun_g___8
- */ 
+ *  de'claration de la fonction MLfun_g___8
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real2(void* x___9) {
 
@@ -92,6 +96,12 @@ void* invokef1(MLfun* func, void* MLparam){
       return return_value;
     }
   }
+
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
 
 void* invokef2(MLfun* func, void* MLparam){
     func->MAX = 1;
@@ -109,9 +119,8 @@ void* invokef2(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction h___12
- *    vue comme la classe : MLfun_h___12
- */ 
+ *  de'claration de la fonction MLfun_h___12
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real3(void* x___13, void* y___14) {
 
@@ -126,6 +135,12 @@ void* invokef2(MLfun* func, void* MLparam){
       return return_value;
     }
   }
+
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
 
 void* invokef3(MLfun* func, void* MLparam){
     func->MAX = 2;
@@ -143,9 +158,8 @@ void* invokef3(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction q___17
- *    vue comme la classe : MLfun_q___17
- */ 
+ *  de'claration de la fonction MLfun_q___17
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real4(void* x___18) {
 
@@ -173,6 +187,12 @@ void* invokef3(MLfun* func, void* MLparam){
     }
   }
 
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
+
 void* invokef4(MLfun* func, void* MLparam){
     func->MAX = 1;
     if (func->MLcounter == (func->MAX-1)) {
@@ -189,9 +209,8 @@ void* invokef4(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction v___25
- *    vue comme la classe : MLfun_v___25
- */ 
+ *  de'claration de la fonction MLfun_v___25
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real5(void* x___26) {
 
@@ -200,6 +219,12 @@ void* invokef4(MLfun* func, void* MLparam){
     return_value = getValue(return_value, &prim_value);
     return return_value;
   }
+
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
 
 void* invokef5(MLfun* func, void* MLparam){
     func->MAX = 1;
@@ -217,9 +242,8 @@ void* invokef5(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction w___27
- *    vue comme la classe : MLfun_w___27
- */ 
+ *  de'claration de la fonction MLfun_w___27
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real6(void* l___28, void* x___29) {
 
@@ -257,6 +281,12 @@ void* invokef5(MLfun* func, void* MLparam){
     }
   }
 
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
+
 void* invokef6(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
@@ -273,9 +303,8 @@ void* invokef6(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction map___37
- *    vue comme la classe : MLfun_map___37
- */ 
+ *  de'claration de la fonction MLfun_map___37
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real7(void* f___38, void* l___39) {
 
@@ -343,6 +372,12 @@ void* invokef6(MLfun* func, void* MLparam){
     }
   }
 
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
+
 void* invokef7(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
@@ -359,9 +394,8 @@ void* invokef7(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction iter___57
- *    vue comme la classe : MLfun_iter___57
- */ 
+ *  de'claration de la fonction MLfun_iter___57
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real8(void* f___58, void* l___59) {
 
@@ -411,6 +445,12 @@ void* invokef7(MLfun* func, void* MLparam){
     }
   }
 
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
+
 void* invokef8(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
@@ -427,9 +467,8 @@ void* invokef8(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction inter___71
- *    vue comme la classe : MLfun_inter___71
- */ 
+ *  de'claration de la fonction MLfun_inter___71
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real9(void* a___72, void* b___73) {
 
@@ -485,6 +524,12 @@ void* invokef8(MLfun* func, void* MLparam){
     }
   }
 
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
+
 void* invokef9(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
@@ -501,9 +546,8 @@ void* invokef9(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction mult___87
- *    vue comme la classe : MLfun_mult___87
- */ 
+ *  de'claration de la fonction MLfun_mult___87
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real10(void* x___88, void* y___89) {
 
@@ -518,6 +562,12 @@ void* invokef9(MLfun* func, void* MLparam){
       return return_value;
     }
   }
+
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
 
 void* invokef10(MLfun* func, void* MLparam){
     func->MAX = 2;
@@ -535,9 +585,8 @@ void* invokef10(MLfun* func, void* MLparam){
 
 
 /**
- *  de'claration de la fonction umap___126
- *    vue comme la classe : MLfun_umap___126
- */ 
+ *  de'claration de la fonction MLfun_umap___126
+ *    Invoke_real: appel de la fonction */ 
 
   void* invoke_real11(void* l___127, void* x___128) {
 
@@ -605,6 +654,12 @@ void* invokef10(MLfun* func, void* MLparam){
     }
   }
 
+
+
+/**
+ *  de'claration de la fonction MLfun
+ *    Invoke: gestion des fermetures */ 
+
 void* invokef11(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
@@ -619,11 +674,16 @@ void* invokef11(MLfun* func, void* MLparam){
 
 
 /**
- * 
+ * Declaration du main
  */
 
 
 int main(int argc, char* argv) {
+
+/**
+* Déclaration du tableau de pointeurs de fonction
+*/
+
 tabfun = malloc(sizeof(*tabfun)*12);
 tabfun[0] = &invokePrimitive;
 tabfun[1] = &invokef1;

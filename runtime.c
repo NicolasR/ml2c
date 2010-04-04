@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+/* Définition des différents types de structure */
 struct MLvalue {
   int id;
   void* val;
@@ -79,6 +81,7 @@ struct MLfun {
 };
 typedef struct MLfun MLfun;
 
+/* Renvoie la taille occupée par une structure (utilisée pour la copie de l'espace mémoire *) */
 int getSize(void* var){
   if (var == NULL)
     return 0;
@@ -104,6 +107,7 @@ int getSize(void* var){
   }
 }
 
+/* Initialiser une nouvelle fonction */
 MLfun new_fun(int n, int funnumber){
   MLfun function;
   function.id = 666;
@@ -115,6 +119,7 @@ MLfun new_fun(int n, int funnumber){
   return function;
 }
 
+/* Ajouter des arguments à l'environnement de la fonction */
 void MLaddenv(void** O_env, void* a, MLfun* func){
   int i=0;
   int size = getSize(a);
@@ -123,13 +128,6 @@ void MLaddenv(void** O_env, void* a, MLfun* func){
   memcpy(func->MLenv[func->MLcounter], a, size);
 }
 
-//Fonctions
-
-MLvalue new_MLvalue(void* val){
-  MLvalue value;
-  value.val = val;
-  return value;
-}
 
 MLunit new_MLunit() {
   MLunit unit;
@@ -140,6 +138,7 @@ MLbool new_MLbool(int val){
   MLbool boolean;
   boolean.id = 1;
   boolean.val = val;
+  boolean.size = sizeof(boolean);
   return boolean;
 }
 
@@ -214,6 +213,7 @@ MLlist new_MLlist(void* a, void* b){
   return list;
 }
 
+/* Initialisation d'une nouvelle primitive (on considere que c'est une fonction) */
 MLfun new_MLprimitive(char* n){
   MLfun primitive;
   primitive.name = n;
@@ -317,9 +317,34 @@ void* MLtl_real(MLlist* l){
 }
 
 MLbool MLequal(void* x, void* y){
-  if (((MLbool*)x)->val == ((MLbool*)y)->val)
-    return new_MLbool(1);
-  return new_MLbool(0);
+  int idx = ((MLvalue*)x)->id;
+  int idy = ((MLvalue*)y)->id;
+  if (idx != idy)
+    return new_MLbool(0);
+
+  switch(idx){
+    case 1:
+      if (((MLbool*)x)->val == ((MLbool*)y)->val)
+        return new_MLbool(1);
+      return new_MLbool(0);
+    case 2:
+      if (((MLint*)x)->val == ((MLint*)y)->val)
+        return new_MLbool(1);
+      return new_MLbool(0);
+    case 3:
+      if (((MLdouble*)x)->val == ((MLdouble*)y)->val)
+        return new_MLbool(1);
+      return new_MLbool(0);
+    case 4:
+        return new_MLbool(1);
+      return new_MLbool(0);
+    case 666:
+	return new_MLbool(0);
+    default:
+      if (((MLvalue*)x)->val == ((MLvalue*)y)->val)
+        return new_MLbool(1);
+      return new_MLbool(0);
+  }
 }
 
 MLunit MLlrp(void){
@@ -330,6 +355,7 @@ MLlist MLnil(void){
   return new_MLlist(NULL, NULL);
 }
 
+/* Invocation de primitive */
 void* invokePrimitive(MLfun* primitive, void* MLparam){
   if (strcmp(primitive->name, "hd")==0) return MLhd_real((MLlist*)MLparam);
   else if (strcmp(primitive->name, "tl")==0) return MLtl_real((MLlist*)MLparam);
@@ -342,26 +368,23 @@ void* invokePrimitive(MLfun* primitive, void* MLparam){
   }
 }
 
-void temp2(void* var, void* source, int size)
-{
-  memcpy(var, source, size);
-
-}
+/* Copie de la valeur pointée par un void* */
 void* getValue(void* var, void* catch){
   int size = getSize(catch);
   if (((MLvalue*)catch)->id == 666)
   { 
     var=malloc(size);
-    temp2(var, catch, size);
+    memcpy(var, catch, size);
   }
   else
   {
     var=malloc(size);
-    temp2(var, catch, size);
+    memcpy(var, catch, size);
   }
   return var;
 }
 
+/* Fonction d'affichage */
 MLunit MLprint(void* x, int type, int cr){
   int type1, type2;
   MLpair* temppair;

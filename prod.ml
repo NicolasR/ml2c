@@ -24,12 +24,20 @@ open Env_typeur;;
 open Env_trans;;
 open Langinter;;
 
+(* Numérotation des fonctions *)
 let ifuncn = ref 1
 let ifuncn2 = ref 1
+
+(* Liste de variables ayant besoin d'être casté *)
 let needtocast = ref []
+
+(* Liste des fonctions pour la déclaration du tableau *)
 let funs = ref []
+
+(* Indique qu'il s'agit d'un appel invoke_real *)
 let isInvokeReal = ref false
-let isReturn = ref false
+
+(* Liste des variables locales / globales et leur type associé *)
 let varlist = ref []
 
 (* des symboles globaux bien utiles par la suite *)
@@ -111,11 +119,10 @@ let out_before (fr,sd,nb,tr,v,isPrim) =
   if sd<>"" then out_start (sd^"=") nb
   else if fr then
     begin 
-      if (not isPrim) then
+      if (not isPrim) then (* Retour différent suivant s'il s'agit d'une primitive ou non *)
       begin
 	out_start ("void* return_value;") nb;
       	out_start ("return_value = &") nb
-      	(*out_start ("return return_value;") nb;*)
       end
       else
       begin
@@ -131,20 +138,7 @@ let out_after  (fr,sd,nb,tr,isPrim) =
       out ";";
       if fr then 
       begin
-	(*if (not isPrim) then*)
-	(*  if (not isPrim) then*)
 	    out ("return "^sd^";")
-	(*  else
-	  begin
-	    out_line("return_value = &prim_value");
-	    out("return return_value;");
-	  end*)
-	(*else
-	begin
-	  out_line(tr^"prim_value;");
-	  out_line("return_value = &prim_value");
-	  out("return return_value;");
-	end*)
       end
   end
   else if fr then 
@@ -180,7 +174,7 @@ let footer_one  s = ();;
 let header_two  s = 
   List.iter out
   [ "/**\n";
-    " * \n";
+    " * Declaration du main\n";
     " */\n";
     (*"class "^s^" {\n"*)
   ]
@@ -302,9 +296,8 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
               prod_instr (fr,sd,nb+1,false,false) i2 ;
               out_start "else" (nb);
               prod_instr (fr,sd,nb+1,false,false) i3
-| RETURN i -> isReturn := true;
-	      prod_instr (true,"",nb,false,false) i;
-	      isReturn := false;
+| RETURN i -> prod_instr (true,"",nb,false,false) i;
+	      
 | AFFECT (v,i) -> prod_instr (false,v,nb,false,false) i
 | BLOCK(l,i) -> out_start "{ " nb;
                   List.iter (fun (v,t,i) -> prod_local_var (false,"",nb+1) 
@@ -320,14 +313,14 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
           var_type := snd(snd(List.find (fun x -> fst(snd(x)) = sd) !varlist));
         with Not_found -> ();
 	end;
-	if (!var_type <> "") then
+	if (!var_type <> "") then (* On caste les retour de fonctions sauf s'il s'agit de void* *)
 	begin
 	  out_before(fr,sd,nb,"","", false);
           out ("*("^(!var_type)^"*)");
 	end
 	else
 	begin
-	  out_before(fr,sd,nb,"","", false);
+	  out_before(fr,sd,nb,"","", false); (* S'il s'agit d'un retour de type void*, on copie la mémoire de la valeur pointée *)
 	  out("getValue(&"^(sd)^", ");
 	end;
        	out ("(*tabfun[");
@@ -345,7 +338,7 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
    let ltp = get_param_type instrl in 
    (*out (name^"( ("^(string_of_type (List.hd ltp))^")");*)
    begin
-     match name with (* A COMPLETER??? *)
+     match name with (* Cas différents suivant le type de primitive *)
        | "MLprint" ->
 	   begin
 	     out_before (fr,sd,nb,"","", false);
@@ -438,11 +431,12 @@ let fun_header fn cn  =
     ["\n\n";
      "/**\n";
      " *  de'claration de la fonction "^fn^"\n";
-     " *    vue comme la classe : "^cn^"\n";
-     " */ \n"]
+     " *    Invoke: gestion des fermetures";
+     " */ \n\n"]
 ;;
 
 let prod_invoke cn  ar = 
+  fun_header cn ar;
   let fnumber = (string_of_int !ifuncn) in
   List.iter out_line 
      ["void* invokef"^fnumber^"(MLfun* func, void* MLparam){";
@@ -470,6 +464,13 @@ let prod_invoke cn  ar =
 ;;
 
 let prod_invoke_fun cn ar t lp instr = 
+  List.iter out 
+    ["\n\n";
+     "/**\n";
+     " *  de'claration de la fonction "^cn^"\n";
+     " *    Invoke_real: appel de la fonction";
+     " */ \n"]
+  ;
   varlist := List.filter(fun x -> fst(x) = true) !varlist;
   out_start ("void* invoke_real"^(string_of_int !ifuncn)^"(") 1;
   needtocast := (List.hd lp)::!needtocast;
@@ -486,22 +487,12 @@ let prod_invoke_fun cn ar t lp instr =
 let prod_fun instr = match instr with 
   FUNCTION (ns,t1,ar,(lp,t2),instr) -> 
       let class_name = "MLfun_"^ns in
-      fun_header ns class_name ;
-      (*out_line ("class "^class_name^" extends MLfun {");
-      out_line "";
-      out_line ("  private static int MAX = "^(string_of_int ar)^";") ;
-      out_line "";
-      out_line ("  "^class_name^"() {super();}") ;
-      out_line "";
-      out_line ("  "^class_name^"(int n) {super(n);}") ;    *)  
+      (*fun_header ns class_name ;*)
       prod_invoke_fun class_name ar t1 lp instr;
       out_line "";
       prod_invoke "MLfun" ar;
       out_line "";
-
-      out_line ""(*;           
-      out_line "}";
-      out_line ("// fin de la classe "^class_name)*)
+      out_line ""
       
       
 |  _ -> ()
@@ -531,17 +522,18 @@ let prod_file filename ast_li =
 	out_line("#include \"runtime.c\"");
     out_line ("void* (**tabfun)(MLfun*, void*);");
     header_one  filename;
-    prod_two  ast_li; (* On veut que les vars globales soient tout en haut *)
+    prod_two  ast_li; (* On veut que les variables globales soient tout en haut *)
     prod_one  ast_li;
-
-    
-
     footer_one  filename;
     header_two  filename;
-
     footer_two  filename;
     header_three  filename;
-(**DECLARATION DE TABLEAU *)
+
+    (**DECLARATION DE TABLEAU *)
+    List.iter out_line["\n/**";
+		       "* Déclaration du tableau de pointeurs de fonction";
+		       "*/\n";
+                      ];	 
     out_line ("tabfun = malloc(sizeof(*tabfun)*"^(string_of_int ((List.length !funs)+1))^");");
     out_line ("tabfun[0] = &invokePrimitive;");
     let i = ref 1 in
@@ -549,6 +541,7 @@ let prod_file filename ast_li =
 	out ("tabfun["^(string_of_int !i)^"]");
 	out_line (" = &"^x^";");
 	i := !i+1) !funs;
+
     prod_three  ast_li;
     footer_three  filename;
     footer_main  filename;
