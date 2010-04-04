@@ -30,6 +30,7 @@ let needtocast = ref []
 let funs = ref []
 let isInvokeReal = ref false
 let isReturn = ref false
+let varlist = ref []
 
 (* des symboles globaux bien utiles par la suite *)
 
@@ -150,7 +151,7 @@ let out_after  (fr,sd,nb,tr,isPrim) =
   begin
     out ";";
     if (isPrim) then
-    	out_start ("return_value = &prim_value;") nb;
+    	out_start ("return_value = getValue(return_value, &prim_value);") nb;
     out_start ("return return_value;") nb;
   end;;
 
@@ -219,9 +220,15 @@ let rec string_of_type typ = match typ with
 
 
 let prod_global_var instr = match instr with
-  VAR (v,t) -> out_start ((string_of_type t)^v^";") 1 
+  VAR (v,t) -> 
+	let var_type = match t with 
+  	| ALPHA -> ""
+  	| _ -> string_of_type t
+  	in
+	varlist := List.append !varlist ((true,(v,var_type))::[]);
+	out_start ((string_of_type t)^v^";") 1 
 | FUNCTION (ns,t1,ar,(p,t2), instr) ->
-    out_start ("MLfun "^ns^"= {666, \"\", 0, "^(string_of_int !ifuncn2)^", 0, 0, "^(string_of_int ar)^", NULL};") 1;
+    out_start ("MLfun "^ns^"= {666, \"\", 0, "^(string_of_int !ifuncn2)^", 0, 32, "^(string_of_int ar)^", NULL};") 1;
     ifuncn2 := !ifuncn2 + 1
 | _ -> ()
 ;;
@@ -245,9 +252,14 @@ let prod_const c = match c with
 ;;
 
 let rec prod_local_var (fr,sd,nb) (v,t) = 
+  let var_type = match t with 
+  | ALPHA -> ""
+  | _ -> string_of_type t
+  in
+  varlist := List.append !varlist ((false,(v,var_type))::[]);
   out_start ((*"MLvalue "*)(string_of_type t)^v^";") nb;;
 
-let rec prod_instr (fr,sd,nb) instr  = match instr with 
+let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with 
   CONST c -> 
 	     if c = EMPTYLIST then
 	     	out_before (fr,sd,nb,"MLlist ","", true)
@@ -263,55 +275,71 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
              else 
              begin
 	       let var_type = string_of_type t in
+	       let isAlpha = ref false in
                out_before (fr,sd,nb,var_type,v, false);
-	       (*if (!isReturn = false) then*)
 	       begin
-		(* On cast les variables quand c'est nécessaire *)
-		if (List.exists (fun x -> x = v) !needtocast) then
-		  out ("*("^var_type^"*)");               
-		out v;
+		if (List.exists (fun x -> x = v) !needtocast) then (* On cast les variables quand c'est nécessaire *)
+		begin
+		  if (t = ALPHA) then (* Dans le cas d'un void*, il faut copier son espace mémoire *)
+		  begin
+		    out ("getValue("^sd^","^v^")");
+		    isAlpha := true
+   		  end
+		  else
+		    out ("*("^var_type^"*)");   
+		end;
+		if (adr && (t <> ALPHA || fadr)) then
+		  out "&";
+		if (!isAlpha = false) then
+		  out v;
                out_after (fr,sd,nb,var_type,false)
 	       end           
              end
 | IF(i1,i2,i3) -> 
               out_start "if (" nb;
-              (*out ("(");*)
-              prod_instr (false,"",nb) i1 ;
-              (*out ")";
-              out".MLaccess()";*)
+              prod_instr (false,"",nb,false,false) i1 ;
               out ".val)";
-              prod_instr (fr,sd,nb+1) i2 ;
+              prod_instr (fr,sd,nb+1,false,false) i2 ;
               out_start "else" (nb);
-              prod_instr (fr,sd,nb+1) i3
+              prod_instr (fr,sd,nb+1,false,false) i3
 | RETURN i -> isReturn := true;
-	      prod_instr (true,"",nb) i;
+	      prod_instr (true,"",nb,false,false) i;
 	      isReturn := false;
-| AFFECT (v,i) -> prod_instr (false,v,nb) i
+| AFFECT (v,i) -> prod_instr (false,v,nb,false,false) i
 | BLOCK(l,i) -> out_start "{ " nb;
                   List.iter (fun (v,t,i) -> prod_local_var (false,"",nb+1) 
                                            (v,t)) l;
-                  List.iter (fun (v,t,i) -> prod_instr (false,v,nb+1) i) l;
-                  prod_instr (fr,sd,nb+1) i;
+                  List.iter (fun (v,t,i) -> prod_instr (false,v,nb+1,false,false) i) l;
+                  prod_instr (fr,sd,nb+1,false,false) i;
                 out_start "}" nb
              
 | APPLY(i1,i2) -> 
-   out_before(fr,sd,nb,"","", false);
-     (*out ("((MLfun)");
-     prod_instr (false,"",nb) i1;
-     out ")";
-     out ".invoke(";*)
-     if (!isInvokeReal) then
-	out ("invoke( &")
-     else
-     begin
-     	out ("(*(tabfun[");
-	prod_instr (false,"",nb) i1;
-	out (".number]))( &");
-     end;
-     prod_instr (false,"",nb) i1;
-     out ", &";
-     prod_instr (false,"",nb) i2;     
+	let var_type = ref "" in
+	begin
+	try
+          var_type := snd(snd(List.find (fun x -> fst(snd(x)) = sd) !varlist));
+        with Not_found -> ();
+	end;
+	if (!var_type <> "") then
+	begin
+	  out_before(fr,sd,nb,"","", false);
+          out ("*("^(!var_type)^"*)");
+	end
+	else
+	begin
+	  out_before(fr,sd,nb,"","", false);
+	  out("getValue(&"^(sd)^", ");
+	end;
+       	out ("(*tabfun[");
+	prod_instr (false,"",nb,false,false) i1;
+	out (".number])( ");
+
+     prod_instr (false,"",nb,true,false) i1;
+     out ", ";
+     prod_instr (false,"",nb,true,false) i2;     
      out")";
+	if (!var_type = "") then
+	out ")";
    out_after(fr,sd,nb,"",false)
 | PRIM ((name,typ),instrl) ->
    let ltp = get_param_type instrl in 
@@ -321,43 +349,31 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
        | "MLprint" ->
 	   begin
 	     out_before (fr,sd,nb,"","", false);
-	     out (name^"( &");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     List.iter2 (fun x y -> out (", &");
-			   prod_instr (false,"",nb+1) x) 
-               (List.tl instrl) (List.tl ltp);
+	     out (name^"( ");
+	     prod_instr (false,"",nb+1,true,true) (List.hd instrl);
 	     out(", ");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     prod_instr (false,"",nb+1,false,false) (List.hd instrl);
 	     out (".id, 1)") ;
 	     out_after(fr,sd,nb,"",false)
 	   end
        | "new_MLpair" -> 
 	  begin
 	     out_before (fr,sd,nb,"MLpair ","", true);
-	     out (name^"( &");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     (*out (", ");*)
-	     (*prod_instr (false,"",nb+1) (List.hd instrl);
-	     out (".id");*)
-	     List.iter2 (fun x y -> out (", &");
-			   prod_instr (false,"",nb+1) x) 
+	     out (name^"( ");
+	     prod_instr (false,"",nb+1,true,false) (List.hd instrl);
+	     List.iter2 (fun x y -> out (", ");
+			   prod_instr (false,"",nb+1,true,false) x) 
                (List.tl instrl) (List.tl ltp);
-	     (*out (", ");*)
-	     (*List.iter2 (fun x y -> prod_instr (false,"",nb+1) x) 
-               (List.tl instrl) (List.tl ltp);*)
-	     (*out (".id )") ;*)out (")") ;
+	     out (")") ;
 	     out_after(fr,sd,nb,"MLpair ",true)
 	   end
        | "new_MLlist" ->
 	   begin
 	     out_before (fr,sd,nb,"MLlist ","", true);
-	     out (name^"( &");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     (*out (", ");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     out (".id");*)
-	     List.iter2 (fun x y -> out (", &");
-			   prod_instr (false,"",nb+1) x) 
+	     out (name^"( ");
+	     prod_instr (false,"",nb+1,true,false) (List.hd instrl);
+	     List.iter2 (fun x y -> out (", ");
+			   prod_instr (false,"",nb+1,true,false) x) 
                (List.tl instrl) (List.tl ltp);
 	     out (")");
 	     out_after(fr,sd,nb,"MLlist ",true)
@@ -367,24 +383,22 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
        | "MLltint"
        | "MLleint" ->
 	   begin
-	     (*out ("MLbool prim_value = "^name^"( &");*)
 	     out_before (fr,sd,nb,"MLbool ","", true);
 	     out (name^"( ");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     prod_instr (false,"",nb+1,false,false) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", ");
-			   prod_instr (false,"",nb+1) x) 
+			   prod_instr (false,"",nb+1,false,false) x) 
                (List.tl instrl) (List.tl ltp);
 	     out ")" ;
 	     out_after(fr,sd,nb,"MLbool ",true);
 	   end
        | "MLequal" ->
 	   begin
-	     (*out ("MLbool prim_value = "^name^"( &");*)
 	     out_before (fr,sd,nb,"MLbool ","", true);
-	     out (name^"( &");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
-	     List.iter2 (fun x y -> out (", &");
-			   prod_instr (false,"",nb+1) x) 
+	     out (name^"( ");
+	     prod_instr (false,"",nb+1,true,false) (List.hd instrl);
+	     List.iter2 (fun x y -> out (", ");
+			   prod_instr (false,"",nb+1,true,false) x) 
                (List.tl instrl) (List.tl ltp);
 	     out ")" ;
 	     out_after(fr,sd,nb,"MLbool ",true);
@@ -395,12 +409,11 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
        | "MLmulint"
        | "MLdivint" ->
 	   begin
-	     (*out ("MLint prim_value = "^name^"( &");*)
 	     out_before (fr,sd,nb,"MLint ","", true);
  	     out (name^"( ");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     prod_instr (false,"",nb+1,false,false) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", ");
-			   prod_instr (false,"",nb+1) x) 
+			   prod_instr (false,"",nb+1,false,false) x) 
                (List.tl instrl) (List.tl ltp);
 	     out ")" ;
 	     out_after(fr,sd,nb,"MLint ",true);
@@ -408,9 +421,9 @@ let rec prod_instr (fr,sd,nb) instr  = match instr with
        | _ ->
 	   begin
 	     out (name^"( ");
-	     prod_instr (false,"",nb+1) (List.hd instrl);
+	     prod_instr (false,"",nb+1,false,false) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", ");
-			   prod_instr (false,"",nb+1) x) 
+			   prod_instr (false,"",nb+1,false,false) x) 
                (List.tl instrl) (List.tl ltp);
 	     out ")" ;
 	     out_after(fr,sd,nb,"",true)
@@ -435,14 +448,13 @@ let prod_invoke cn  ar =
      ["void* invokef"^fnumber^"(MLfun* func, void* MLparam){";
       "    func->MAX = "^(string_of_int ar)^";";
       "    if (func->MLcounter == (func->MAX-1)) {";
-      "	      void* (*f)(MLfun*, void*) = &invokef"^fnumber^";";
      ];
 
   out ("      return invoke_real"^fnumber^"(");
   for i=0 to ar-2 do 
     out ("func->MLenv["^(string_of_int i)^"], ")
   done;
-  out_line "MLparam, f);";     
+  out_line "MLparam);";     
 
   List.iter out_line 
      ["    }";
@@ -458,14 +470,14 @@ let prod_invoke cn  ar =
 ;;
 
 let prod_invoke_fun cn ar t lp instr = 
-
+  varlist := List.filter(fun x -> fst(x) = true) !varlist;
   out_start ("void* invoke_real"^(string_of_int !ifuncn)^"(") 1;
   needtocast := (List.hd lp)::!needtocast;
   out ("void* "^(List.hd lp));
   List.iter (fun x -> out (", void* "^x); needtocast := x::!needtocast;) (List.tl lp);
-  out_line ", void* (*invokef)(MLfun*, void*)) {";
+  out_line ") {";
   isInvokeReal := true;
-  prod_instr (true,"",2) instr;
+  prod_instr (true,"",2,false,false) instr;
   isInvokeReal := false;
   out_start "}" 1;
   out_line "";
@@ -504,7 +516,7 @@ let prod_one  ast_li =
 
 
 let prod_three  ast_li = 
- List.iter (prod_instr  (false,"",0) ) ast_li
+ List.iter (prod_instr  (false,"",0,false,false) ) ast_li
 ;;
 
 
@@ -517,6 +529,7 @@ let prod_file filename ast_li =
   try 
     header_main  filename;
 	out_line("#include \"runtime.c\"");
+    out_line ("void* (**tabfun)(MLfun*, void*);");
     header_one  filename;
     prod_two  ast_li; (* On veut que les vars globales soient tout en haut *)
     prod_one  ast_li;
@@ -529,7 +542,7 @@ let prod_file filename ast_li =
     footer_two  filename;
     header_three  filename;
 (**DECLARATION DE TABLEAU *)
-    out_line ("void* (*tabfun["^(string_of_int ((List.length !funs)+1))^"])(MLfun*, void*);");
+    out_line ("tabfun = malloc(sizeof(*tabfun)*"^(string_of_int ((List.length !funs)+1))^");");
     out_line ("tabfun[0] = &invokePrimitive;");
     let i = ref 1 in
     List.iter (fun x -> 

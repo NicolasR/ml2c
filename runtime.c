@@ -1,7 +1,12 @@
+/*****************************************************
+** RUNTIME POUR LE COMPILATEUR ML2C	            **
+** Ecrite par Pauline CHAMOREAU et Nicolas RIGNAULT **
+*****************************************************/
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-//A supprimer??
+
 struct MLvalue {
   int id;
   void* val;
@@ -74,6 +79,31 @@ struct MLfun {
 };
 typedef struct MLfun MLfun;
 
+int getSize(void* var){
+  if (var == NULL)
+    return 0;
+  int id = ((MLvalue*)var)->id;
+  switch(id){
+    case 1:
+	return ((MLbool*)var)->size;
+    case 2:
+	return ((MLint*)var)->size;
+    case 3:
+	return ((MLdouble*)var)->size;
+    case 4:
+	return ((MLstring*)var)->size;
+    case 5:
+	return ((MLpair*)var)->size;
+    case 6:
+	return ((MLlist*)var)->size;
+    case 666:
+	return ((MLfun*)var)->size;
+    default:
+	printf("Erreur getSize: no id %d\n", id);
+	exit(0);
+  }
+}
+
 MLfun new_fun(int n, int funnumber){
   MLfun function;
   function.id = 666;
@@ -87,32 +117,11 @@ MLfun new_fun(int n, int funnumber){
 
 void MLaddenv(void** O_env, void* a, MLfun* func){
   int i=0;
-  int size;
-  if (((MLvalue*)a)->id == 666)
-  {
-    //printf("Oui\n");
-    //printf("%d\n", ((MLfun*)a)->id);
-    size = ((MLfun*)a)->size;
-  }
-  else
-    size =((MLvalue*)a)->size;
-  //printf("[debug]size: %d\n", size);
-  /*if (((MLvalue*)a)->id == 2)
-  	printf("addenv: %d\n", ((MLint*)a)->val);*/
-  func->MLenv = (void**)realloc(func->MLenv, /*sizeof(func->MLenv)**/(func->MLcounter+1));
+  int size = getSize(a);
+  func->MLenv = (void**)realloc(func->MLenv,(func->MLcounter+1));
   func->MLenv[func->MLcounter] = malloc(size);
   memcpy(func->MLenv[func->MLcounter], a, size);
-  /*if (((MLvalue*)a)->id == 2)
-	printf("verif addenv: %d\n", ((MLint*)func->MLenv[func->MLcounter])->val);*/
-  //func->size +=1+size;
 }
-
-/*struct MLprimitive {
-  int id;
-  char* name;
-};
-typedef struct MLprimitive MLprimitive;*/
-
 
 //Fonctions
 
@@ -147,6 +156,7 @@ MLdouble new_MLdouble(double val){
   MLdouble doubleval;
   doubleval.id = 3;
   doubleval.val = val;
+  doubleval.size = sizeof(doubleval);
   return doubleval;
 }
 
@@ -154,10 +164,11 @@ MLstring new_MLstring(char* s){
   MLstring string;
   string.id = 4;
   string.val = s;
+  string.size = sizeof(string);
   return string;
 }
 
-MLpair new_MLpair(void* a/*, int type1*/, void* b/*, int type2*/){
+MLpair new_MLpair(void* a, void* b){
   MLpair pair;
   pair.id = 5;
   MLvalue* va = (MLvalue*)a;
@@ -172,51 +183,34 @@ MLpair new_MLpair(void* a/*, int type1*/, void* b/*, int type2*/){
   return pair;
 }
 
-MLlist new_MLlist(void* a/*, int type1*/, void* b){
+MLlist new_MLlist(void* a, void* b){
   MLlist list;
   list.id = 6;
-  MLvalue* va = (MLvalue*)a;
-  MLfun* va2 = (MLfun*)a;
-  MLlist* vb = (MLlist*)b;
-  if (a != NULL && va->id != 0)
+  int ida = 0, idb = 0;
+  int sizea = getSize(a), sizeb = getSize(b);
+  if (a != NULL)
   {
-    
-    //printf("[debug]id_new_list_a: %d\n", va->id);
-    //fflush(stdout);
-    list.type1 = va->id;
-    //printf("[debug]typelistcar: %d\n", list.type1);
-    if (va->id == 666)
-    {
-      list.MLcar = malloc(va2->size);
-      memcpy(list.MLcar, a, va2->size);
-    }
-    else
-    {
-      list.MLcar = malloc(va->size);
-      memcpy(list.MLcar, a, va->size);
-    }
-    //printf("[debug]car: %d", ((MLint*)list.MLcar)->val);
-    //printf("Testidlistcar: %d\n", ((MLint*)list.MLcar)->val);
+    ida = ((MLvalue*)a)->id;
+    list.type1 = ida;
+    list.MLcar = malloc(sizea);
+    memcpy(list.MLcar, a, sizea);
   }
   else
   {
-    //printf("[debug]typelistcar: NULL\n");
     list.type1 = 0;
     list.MLcar = NULL;
   }
 
-  if (b != NULL && vb->id != 0)
+  if (b != NULL)
   {
-    list.MLcdr = malloc(vb->size);
-    memcpy(list.MLcdr, b, vb->size);
+    list.MLcdr = malloc(sizeb);
+    memcpy(list.MLcdr, b, sizeb);
   }
   else
   {
      list.MLcdr = NULL;
   }
-	//test = (MLint*) temp->MLcar; 
-	//printf("Testidlistcar: %d\n", ((MLint*)temp->MLcar)->id);
-     list.size = sizeof(list);
+  list.size = sizeof(list);
   return list;
 }
 
@@ -348,16 +342,36 @@ void* invokePrimitive(MLfun* primitive, void* MLparam){
   }
 }
 
+void temp2(void* var, void* source, int size)
+{
+  memcpy(var, source, size);
+
+}
+void* getValue(void* var, void* catch){
+  int size = getSize(catch);
+  if (((MLvalue*)catch)->id == 666)
+  { 
+    var=malloc(size);
+    temp2(var, catch, size);
+  }
+  else
+  {
+    var=malloc(size);
+    temp2(var, catch, size);
+  }
+  return var;
+}
+
 MLunit MLprint(void* x, int type, int cr){
   int type1, type2;
   MLpair* temppair;
   MLlist* templist;
-MLlist* templist2;
+  MLlist* templist2;
   MLfun* tempfun;
   int valint, i;
   double valdouble;
   char* s;
-//printf("[debug]type: %d\n", type);
+
   switch(type){
     case 1:
       valint = ((MLbool*)x)->val;
@@ -388,36 +402,28 @@ MLlist* templist2;
   }
   switch(type){
     case 1: 
-        //printf("debug: booleen\n");
       if(valint)
       	printf("true");
       else
 	printf("false");
       break;
     case 2:
-	//printf("debug: entier\n");
       printf("%d", (valint));
       break;
     case 3:
-	//printf("debug: double\n");
       printf("%lf", (valdouble));
       break;
     case 4:
-	//printf("debug: chaine\n");
       printf("\"%s\"", (s));
       break;
     case 5:
-      //printf("debug: paire\n");
       printf("(");
-      //MLvalue* t = temp->MLfst;
-	//printf("debug type: %d", type1);
       MLprint(temppair->MLfst, type1, 0);
       printf(",");
       MLprint(temppair->MLsnd, type2, 0);
       printf(")");
       break;
     case 6:
-	//printf("debug: liste\n");
       if(templist->MLcar == NULL)
 	printf("[]");
       else
@@ -428,9 +434,7 @@ MLlist* templist2;
       }
       break;
     case 666:
-	//printf("debug: liste\n");
       printf("<fun> [");
-      //printf("counterprint: %d", tempfun->MAX);
       for (i=0; i<tempfun->MLcounter; i++)
       {
            MLprint(tempfun->MLenv[i], ((MLvalue*)tempfun->MLenv[i])->id, 0);
@@ -438,7 +442,7 @@ MLlist* templist2;
       printf("]");
       break;
     default:
-      printf("Erreur print! Arret programme: %d\n",type);
+      printf("Erreur print!: no type with id %d\n",type);
       exit(1);	
   }
   if (cr)

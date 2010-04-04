@@ -3,6 +3,7 @@
  */
 #include "runtime.c"
 void* (**tabfun)(MLfun*, void*);
+
   MLfun null___1= {666, "", 0, 1, 0, 32, 1, NULL};
   MLfun g___8= {666, "", 0, 2, 0, 32, 1, NULL};
   MLfun h___12= {666, "", 0, 3, 0, 32, 2, NULL};
@@ -28,7 +29,7 @@ void* (**tabfun)(MLfun*, void*);
  *    vue comme la classe : MLfun_null___1
  */ 
 
-  void* invoke_real1(void* l___2, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real1(void* l___2) {
 
     { 
       MLbool T___3;
@@ -61,8 +62,7 @@ void* (**tabfun)(MLfun*, void*);
 void* invokef1(MLfun* func, void* MLparam){
     func->MAX = 1;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef1;
-      return invoke_real1(MLparam, f);
+      return invoke_real1(MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -79,7 +79,7 @@ void* invokef1(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_g___8
  */ 
 
-  void* invoke_real2(void* x___9, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real2(void* x___9) {
 
     { 
       MLlist T___10;
@@ -88,7 +88,7 @@ void* invokef1(MLfun* func, void* MLparam){
       T___11=MLnil();
       void* return_value;
       MLbool prim_value = MLequal( &T___10, &T___11);
-      return_value = &prim_value;
+      return_value = getValue(return_value, &prim_value);
       return return_value;
     }
   }
@@ -96,8 +96,7 @@ void* invokef1(MLfun* func, void* MLparam){
 void* invokef2(MLfun* func, void* MLparam){
     func->MAX = 1;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef2;
-      return invoke_real2(MLparam, f);
+      return invoke_real2(MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -114,27 +113,16 @@ void* invokef2(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_h___12
  */ 
 
-  void* invoke_real3(void* x___13, void* y___14, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real3(void* x___13, void* y___14) {
 
     { 
       void* T___15;
       MLlist T___16;
-      T___15=*(void* *)x___13;
-      void* temp = x___13;
-      if (((MLvalue*)temp)->id == 666)
-      {
-        T___15= malloc(((MLfun*)temp)->size);
-	memcpy(T___15, temp, ((MLfun*)temp)->size);
-      }
-      else
-      {
-      	T___15= malloc(((MLvalue*)temp)->size);
-      	memcpy(T___15, temp, ((MLvalue*)temp)->size);
-      }
+      T___15=getValue(T___15,x___13);
       T___16=*(MLlist *)y___14;
       void* return_value;
       MLlist prim_value = new_MLlist( T___15, &T___16);
-      return_value = &prim_value;
+      return_value = getValue(return_value, &prim_value);
       return return_value;
     }
   }
@@ -142,8 +130,7 @@ void* invokef2(MLfun* func, void* MLparam){
 void* invokef3(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef3;
-      return invoke_real3(func->MLenv[0], MLparam, f);
+      return invoke_real3(func->MLenv[0], MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -160,7 +147,7 @@ void* invokef3(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_q___17
  */ 
 
-  void* invoke_real4(void* x___18, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real4(void* x___18) {
 
     { 
       void* T___19;
@@ -170,28 +157,18 @@ void* invokef3(MLfun* func, void* MLparam){
         MLlist T___21;
         T___20=MLhd();
         T___21=*(MLlist *)x___18;
-	void* temp = (*tabfun[T___20.number])( &T___20, &T___21);
-        if (((MLvalue*)temp)->id == 666)
-        {
-          T___19= malloc(((MLfun*)temp)->size);
-	  memcpy(T___19, temp, ((MLfun*)temp)->size);
-        }
-        else
-        {
-      	  T___19= malloc(((MLvalue*)temp)->size);
-      	  memcpy(T___19, temp, ((MLvalue*)temp)->size);
-        }
+        T___19=getValue(&T___19, (*tabfun[T___20.number])( &T___20, &T___21));
       }
       { 
         MLfun T___23;
         MLlist T___24;
         T___23=MLtl();
         T___24=*(MLlist *)x___18;
-        T___22=*(MLlist*)(*tabfun[T___23.number])( &T___23, &T___24);
+        T___22=*(MLlist *)(*tabfun[T___23.number])( &T___23, &T___24);
       }
       void* return_value;
       MLpair prim_value = new_MLpair( T___19, &T___22);
-      return_value = &prim_value;
+      return_value = getValue(return_value, &prim_value);
       return return_value;
     }
   }
@@ -199,8 +176,7 @@ void* invokef3(MLfun* func, void* MLparam){
 void* invokef4(MLfun* func, void* MLparam){
     func->MAX = 1;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef4;
-      return invoke_real4(MLparam, f);
+      return invoke_real4(MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -217,19 +193,18 @@ void* invokef4(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_v___25
  */ 
 
-  void* invoke_real5(void* x___26, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real5(void* x___26) {
 
     void* return_value;
     MLlist prim_value = MLnil();
-    return_value = &prim_value;
+    return_value = getValue(return_value, &prim_value);
     return return_value;
   }
 
 void* invokef5(MLfun* func, void* MLparam){
     func->MAX = 1;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef5;
-      return invoke_real5(MLparam, f);
+      return invoke_real5(MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -246,7 +221,7 @@ void* invokef5(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_w___27
  */ 
 
-  void* invoke_real6(void* l___28, void* x___29, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real6(void* l___28, void* x___29) {
 
     { 
       MLbool T___30;
@@ -271,17 +246,7 @@ void* invokef5(MLfun* func, void* MLparam){
           { 
             void* T___35;
             MLlist T___36;
-            void* temp = x___29;
-            if (((MLvalue*)temp)->id == 666)
-            {
-              T___35= malloc(((MLfun*)temp)->size);
-	      memcpy(T___35, temp, ((MLfun*)temp)->size);
-            }
-            else
-            {
-      	      T___35= malloc(((MLvalue*)temp)->size);
-      	      memcpy(T___35, temp, ((MLvalue*)temp)->size);
-            }
+            T___35=getValue(T___35,x___29);
             T___36=MLnil();
             T___34=new_MLlist( T___35, &T___36);
           }
@@ -295,8 +260,7 @@ void* invokef5(MLfun* func, void* MLparam){
 void* invokef6(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef6;
-      return invoke_real6(func->MLenv[0], MLparam, f);
+      return invoke_real6(func->MLenv[0], MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -313,7 +277,7 @@ void* invokef6(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_map___37
  */ 
 
-  void* invoke_real7(void* f___38, void* l___39, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real7(void* f___38, void* l___39) {
 
     { 
       MLbool T___40;
@@ -322,7 +286,7 @@ void* invokef6(MLfun* func, void* MLparam){
         MLlist T___42;
         T___41=null___1;
         T___42=*(MLlist *)l___39;
-        T___40=*(MLbool*)(*tabfun[T___41.number])( &T___41, &T___42);
+        T___40=*(MLbool *)(*tabfun[T___41.number])( &T___41, &T___42);
       }
       if (T___40.val)
         { 
@@ -347,20 +311,9 @@ void* invokef6(MLfun* func, void* MLparam){
                 MLlist T___49;
                 T___48=MLhd();
                 T___49=*(MLlist *)l___39;
-                T___47=(*tabfun[T___48.number])( &T___48, &T___49);
+                T___47=getValue(&T___47, (*tabfun[T___48.number])( &T___48, &T___49));
               }
-	      void* temp;
-              temp=(*tabfun[T___46.number])( &T___46, T___47);
-	      if (((MLvalue*)temp)->id == 666)
-              {
-	      	T___45 = malloc(((MLfun*)temp)->size);
-	      	memcpy(T___45, temp, ((MLfun*)temp)->size);
-  	      }
-	      else
-	      {
-		T___45 = malloc(((MLvalue*)temp)->size);
-	      	memcpy(T___45, temp, ((MLvalue*)temp)->size);
-              }
+              T___45=getValue(&T___45, (*tabfun[T___46.number])( &T___46, T___47));
             }
             { 
               MLfun T___51;
@@ -370,16 +323,16 @@ void* invokef6(MLfun* func, void* MLparam){
                 MLfun T___53;
                 T___52=map___37;
                 T___53=*(MLfun *)f___38;
-                T___51=*(MLfun*)(*tabfun[T___52.number])( &T___52, &T___53);
+                T___51=*(MLfun *)(*tabfun[T___52.number])( &T___52, &T___53);
               }
               { 
                 MLfun T___55;
                 MLlist T___56;
                 T___55=MLtl();
                 T___56=*(MLlist *)l___39;
-                T___54=*(MLlist*)(*tabfun[T___55.number])( &T___55, &T___56);
+                T___54=*(MLlist *)(*tabfun[T___55.number])( &T___55, &T___56);
               }
-              T___50=*(MLlist*)(*tabfun[T___51.number])( &T___51, &T___54);
+              T___50=*(MLlist *)(*tabfun[T___51.number])( &T___51, &T___54);
             }
             T___44=new_MLlist( T___45, &T___50);
           }
@@ -393,8 +346,7 @@ void* invokef6(MLfun* func, void* MLparam){
 void* invokef7(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef7;
-      return invoke_real7(func->MLenv[0], MLparam, f);
+      return invoke_real7(func->MLenv[0], MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -411,7 +363,7 @@ void* invokef7(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_iter___57
  */ 
 
-  void* invoke_real8(void* f___58, void* l___59, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real8(void* f___58, void* l___59) {
 
     { 
       MLbool T___60;
@@ -420,7 +372,7 @@ void* invokef7(MLfun* func, void* MLparam){
         MLlist T___62;
         T___61=null___1;
         T___62=*(MLlist *)l___59;
-        T___60=*(MLbool*)(*tabfun[T___61.number])( &T___61, &T___62);
+        T___60=*(MLbool *)(*tabfun[T___61.number])( &T___61, &T___62);
       }
       if (T___60.val)
         { 
@@ -446,21 +398,11 @@ void* invokef7(MLfun* func, void* MLparam){
                 MLlist T___70;
                 T___69=MLtl();
                 T___70=*(MLlist *)l___59;
-                T___68=*(MLlist*)(*tabfun[T___69.number])( &T___69, &T___70);
+                T___68=*(MLlist *)(*tabfun[T___69.number])( &T___69, &T___70);
               }
-	      void* temp = (*tabfun[T___67.number])( &T___67, &T___68);
-	      if (((MLvalue*)temp)->id == 666)
-	      {
-              	T___66= malloc(((MLfun*)temp)->size);
-	      	memcpy(T___66, temp, ((MLfun*)temp)->size);
-   	      }
-	      else
-	      {
-              	T___66= malloc(((MLvalue*)temp)->size);
-	      	memcpy(T___66, temp, ((MLvalue*)temp)->size);
-   	      }
+              T___66=getValue(&T___66, (*tabfun[T___67.number])( &T___67, &T___68));
             }
-            T___64=*(MLlist*)(*tabfun[T___65.number])( &T___65, T___66);
+            T___64=*(MLlist *)(*tabfun[T___65.number])( &T___65, T___66);
           }
           void* return_value;
           return_value = &T___64;
@@ -472,8 +414,7 @@ void* invokef7(MLfun* func, void* MLparam){
 void* invokef8(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef8;
-      return invoke_real8(func->MLenv[0], MLparam, f);
+      return invoke_real8(func->MLenv[0], MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -490,7 +431,7 @@ void* invokef8(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_inter___71
  */ 
 
-  void* invoke_real9(void* a___72, void* b___73, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real9(void* a___72, void* b___73) {
 
     { 
       MLbool T___74;
@@ -530,10 +471,10 @@ void* invokef8(MLfun* func, void* MLparam){
                   T___85=new_MLint(1);
                   T___83=MLaddint( T___84, T___85);
                 }
-                T___81=*(MLfun*)(*tabfun[T___82.number])( &T___82, &T___83);
+                T___81=*(MLfun *)(*tabfun[T___82.number])( &T___82, &T___83);
               }
               T___86=*(MLint *)b___73;
-              T___80=*(MLlist*)(*tabfun[T___81.number])( &T___81, &T___86);
+              T___80=*(MLlist *)(*tabfun[T___81.number])( &T___81, &T___86);
             }
             T___78=new_MLlist( &T___79, &T___80);
           }
@@ -547,12 +488,10 @@ void* invokef8(MLfun* func, void* MLparam){
 void* invokef9(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef9;
-      return invoke_real9(func->MLenv[0], MLparam, f);
+      return invoke_real9(func->MLenv[0], MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
-
       func->MLcounter = func->MLcounter + 1;
 	     return func;
     }
@@ -566,7 +505,7 @@ void* invokef9(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_mult___87
  */ 
 
-  void* invoke_real10(void* x___88, void* y___89, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real10(void* x___88, void* y___89) {
 
     { 
       MLint T___90;
@@ -575,7 +514,7 @@ void* invokef9(MLfun* func, void* MLparam){
       T___91=*(MLint *)y___89;
       void* return_value;
       MLint prim_value = MLmulint( T___90, T___91);
-      return_value = &prim_value;
+      return_value = getValue(return_value, &prim_value);
       return return_value;
     }
   }
@@ -583,8 +522,7 @@ void* invokef9(MLfun* func, void* MLparam){
 void* invokef10(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef10;
-      return invoke_real10(func->MLenv[0], MLparam, f);
+      return invoke_real10(func->MLenv[0], MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -601,7 +539,7 @@ void* invokef10(MLfun* func, void* MLparam){
  *    vue comme la classe : MLfun_umap___126
  */ 
 
-  void* invoke_real11(void* l___127, void* x___128, void* (*invokef)(MLfun*, void*)) {
+  void* invoke_real11(void* l___127, void* x___128) {
 
     { 
       MLbool T___129;
@@ -610,7 +548,7 @@ void* invokef10(MLfun* func, void* MLparam){
         MLlist T___131;
         T___130=null___1;
         T___131=*(MLlist *)l___127;
-        T___129=*(MLbool*)(*tabfun[T___130.number])( &T___130, &T___131);
+        T___129=*(MLbool *)(*tabfun[T___130.number])( &T___130, &T___131);
       }
       if (T___129.val)
         { 
@@ -634,30 +572,10 @@ void* invokef10(MLfun* func, void* MLparam){
                 MLlist T___137;
                 T___136=MLhd();
                 T___137=*(MLlist *)l___127;
-                T___135=*(MLfun*)(*tabfun[T___136.number])( &T___136, &T___137);
+                T___135=*(MLfun *)(*tabfun[T___136.number])( &T___136, &T___137);
               }
-	      void* temp = x___128;
-	      if (((MLvalue*)temp)->id == 666)
-	      {
-	      	T___138 = malloc( ((MLfun*)temp)->size);
-	      	memcpy(T___138, temp, ((MLfun*)temp)->size);
-	      }
-	      else
-	      {
-	      	T___138 = malloc( ((MLvalue*)temp)->size);
-	      	memcpy(T___138, temp, ((MLvalue*)temp)->size);
-	      }
-	      temp = (*tabfun[T___135.number])( &T___135, T___138);
-	      if (((MLvalue*)temp)->id == 666)
-	      {
-	      	T___134 = malloc( ((MLfun*)temp)->size);
-	      	memcpy(T___134, temp, ((MLfun*)temp)->size);
-	      }
-	      else
-	      {
-	      	T___134 = malloc( ((MLvalue*)temp)->size);
-	      	memcpy(T___134, temp, ((MLvalue*)temp)->size);
-	      }
+              T___138=getValue(T___138,x___128);
+              T___134=getValue(&T___134, (*tabfun[T___135.number])( &T___135, T___138));
             }
             { 
               MLfun T___140;
@@ -671,22 +589,12 @@ void* invokef10(MLfun* func, void* MLparam){
                   MLlist T___144;
                   T___143=MLtl();
                   T___144=*(MLlist *)l___127;
-                  T___142=*(MLlist*)(*tabfun[T___143.number])( &T___143, &T___144);
+                  T___142=*(MLlist *)(*tabfun[T___143.number])( &T___143, &T___144);
                 }
-                T___140=*(MLfun*)(*tabfun[T___141.number])( &T___141, &T___142);
+                T___140=*(MLfun *)(*tabfun[T___141.number])( &T___141, &T___142);
               }
-	      void* temp = x___128;
-	      if (((MLvalue*)temp)->id == 666)
-	      {
-              	T___145=malloc(((MLfun*)temp)->size);
-   	      	memcpy(T___145, temp, ((MLfun*)temp)->size);
-	      }
-	      else
-	      {
-              	T___145=malloc(((MLvalue*)temp)->size);
-   	      	memcpy(T___145, temp, ((MLvalue*)temp)->size);
-	      }
-              T___139=*(MLlist*)(*tabfun[T___140.number])( &T___140, T___145);
+              T___145=getValue(T___145,x___128);
+              T___139=*(MLlist *)(*tabfun[T___140.number])( &T___140, T___145);
             }
             T___133=new_MLlist( T___134, &T___139);
           }
@@ -700,8 +608,7 @@ void* invokef10(MLfun* func, void* MLparam){
 void* invokef11(MLfun* func, void* MLparam){
     func->MAX = 2;
     if (func->MLcounter == (func->MAX-1)) {
-	      void* (*f)(MLfun*, void*) = &invokef11;
-      return invoke_real11(func->MLenv[0], MLparam, f);
+      return invoke_real11(func->MLenv[0], MLparam);
     }
     else {
       MLaddenv(func->MLenv, MLparam, func);
@@ -739,10 +646,10 @@ tabfun[11] = &invokef11;
     MLint T___95;
     T___94=inter___71;
     T___95=new_MLint(1);
-    T___93=*(MLfun*)(*(tabfun[T___94.number]))( &T___94, &T___95);
+    T___93=*(MLfun *)(*tabfun[T___94.number])( &T___94, &T___95);
   }
   T___96=new_MLint(10);
-  i___92=*(MLlist*)(*(tabfun[T___93.number]))( &T___93, &T___96);
+  i___92=*(MLlist *)(*tabfun[T___93.number])( &T___93, &T___96);
 }
 { 
   MLunit bidon___97;
@@ -761,12 +668,12 @@ tabfun[11] = &invokef11;
       MLint T___103;
       T___102=mult___87;
       T___103=new_MLint(5);
-      T___101=*(MLfun*)(*(tabfun[T___102.number]))( &T___102, &T___103);
+      T___101=*(MLfun *)(*tabfun[T___102.number])( &T___102, &T___103);
     }
-    T___99=*(MLfun*)(*(tabfun[T___100.number]))( &T___100, &T___101);
+    T___99=*(MLfun *)(*tabfun[T___100.number])( &T___100, &T___101);
   }
   T___104=i___92;
-  l___98=*(MLlist*)(*(tabfun[T___99.number]))( &T___99, &T___104);
+  l___98=*(MLlist *)(*tabfun[T___99.number])( &T___99, &T___104);
 }
 { 
   MLunit bidon___105;
@@ -788,9 +695,9 @@ fd___106=map___37;
     MLint T___112;
     T___111=mult___87;
     T___112=new_MLint(5);
-    T___110=*(MLfun*)(*(tabfun[T___111.number]))( &T___111, &T___112);
+    T___110=*(MLfun *)(*tabfun[T___111.number])( &T___111, &T___112);
   }
-  ig___108=*(MLfun*)(*(tabfun[T___109.number]))( &T___109, &T___110);
+  ig___108=*(MLfun *)(*tabfun[T___109.number])( &T___109, &T___110);
 }
 { 
   MLunit bidon___113;
@@ -802,7 +709,7 @@ fd___106=map___37;
   MLlist T___116;
   T___115=ig___108;
   T___116=l___98;
-  bi___114=*(MLlist*)(*(tabfun[T___115.number]))( &T___115, &T___116);
+  bi___114=*(MLlist *)(*tabfun[T___115.number])( &T___115, &T___116);
 }
 { 
   MLunit bidon___117;
@@ -814,7 +721,7 @@ fd___106=map___37;
   MLfun T___120;
   T___119=map___37;
   T___120=mult___87;
-  ik___118=*(MLfun*)(*(tabfun[T___119.number]))( &T___119, &T___120);
+  ik___118=*(MLfun *)(*tabfun[T___119.number])( &T___119, &T___120);
 }
 { 
   MLunit bidon___121;
@@ -826,7 +733,7 @@ fd___106=map___37;
   MLlist T___124;
   T___123=ik___118;
   T___124=i___92;
-  b___122=*(MLlist*)(*(tabfun[T___123.number]))( &T___123, &T___124);
+  b___122=*(MLlist *)(*tabfun[T___123.number])( &T___123, &T___124);
 }
 { 
   MLunit bidon___125;
@@ -841,10 +748,10 @@ fd___106=map___37;
     MLlist T___149;
     T___148=umap___126;
     T___149=b___122;
-    T___147=*(MLfun*)(*(tabfun[T___148.number]))( &T___148, &T___149);
+    T___147=*(MLfun *)(*tabfun[T___148.number])( &T___148, &T___149);
   }
   T___150=new_MLint(10);
-  value___146=*(MLlist*)(*(tabfun[T___147.number]))( &T___147, &T___150);
+  value___146=*(MLlist *)(*tabfun[T___147.number])( &T___147, &T___150);
 }
 { 
   MLunit bidon___151;
