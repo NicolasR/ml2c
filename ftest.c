@@ -1,7 +1,7 @@
 /**
  *  ftest.c engendre par ml2c 
  */
-#include "runtime.c"
+#include "runtime.h"
 void* (**tabfun)(MLfun*, void*);
 
   MLfun null___1= {666, "", 0, 1, 0, 32, 1, NULL};

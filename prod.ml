@@ -519,7 +519,7 @@ let prod_file filename ast_li =
   module_name:=filename;
   try 
     header_main  filename;
-	out_line("#include \"runtime.c\"");
+	out_line("#include \"runtime.h\"");
     out_line ("void* (**tabfun)(MLfun*, void*);");
     header_one  filename;
     prod_two  ast_li; (* On veut que les variables globales soient tout en haut *)
