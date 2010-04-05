@@ -115,14 +115,16 @@ let out_start s nb = out ("\n"^(String.sub shift_string 0 (2*nb))^s);;
 let out_end s nb = out ("\n"^(String.sub shift_string 0 nb)^"}\n");;
 let out_line s = out (s^"\n");;
 
-let out_before (fr,sd,nb,tr,v,isPrim) = 
+let out_before (fr,sd,nb,tr,v,isPrim,spec) = 
   if sd<>"" then out_start (sd^"=") nb
   else if fr then
     begin 
       if (not isPrim) then (* Retour différent suivant s'il s'agit d'une primitive ou non *)
       begin
 	out_start ("void* return_value;") nb;
-      	out_start ("return_value = &") nb
+      	out_start ("return_value = ") nb;
+	if (spec = false) then
+	  out "&";
       end
       else
       begin
@@ -256,9 +258,9 @@ let rec prod_local_var (fr,sd,nb) (v,t) =
 let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with 
   CONST c -> 
 	     if c = EMPTYLIST then
-	     	out_before (fr,sd,nb,"MLlist ","", true)
+	     	out_before (fr,sd,nb,"MLlist ","", true, false)
 	     else
-	     	out_before (fr,sd,nb,"","", false);		
+	     	out_before (fr,sd,nb,"","", false, false);		
              prod_const c;
 	     if c = EMPTYLIST then
              	out_after (fr,sd,nb,"",true)
@@ -270,7 +272,7 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
              begin
 	       let var_type = string_of_type t in
 	       let isAlpha = ref false in
-               out_before (fr,sd,nb,var_type,v, false);
+               out_before (fr,sd,nb,var_type,v, false, false);
 	       begin
 		if (List.exists (fun x -> x = v) !needtocast) then (* On cast les variables quand c'est nécessaire *)
 		begin
@@ -315,13 +317,23 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
 	end;
 	if (!var_type <> "") then (* On caste les retour de fonctions sauf s'il s'agit de void* *)
 	begin
-	  out_before(fr,sd,nb,"","", false);
+	  out_before(fr,sd,nb,"","", false, false);
           out ("*("^(!var_type)^"*)");
 	end
 	else
 	begin
-	  out_before(fr,sd,nb,"","", false); (* S'il s'agit d'un retour de type void*, on copie la mémoire de la valeur pointée *)
-	  out("getValue(&"^(sd)^", ");
+	  if (sd <> "") then
+	  begin
+	    out_before(fr,sd,nb,"","", false, false);
+	    out("getValue(");
+	    out ("&"^(sd)^",")
+	  end
+	  else
+	  begin
+	    out_before(fr,sd,nb,"","", false, true);
+	    out("getValue(");
+	    out ("return_value, ");
+	  end
 	end;
        	out ("(*tabfun[");
 	prod_instr (false,"",nb,false,false) i1;
@@ -341,7 +353,7 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
      match name with (* Cas différents suivant le type de primitive *)
        | "MLprint" ->
 	   begin
-	     out_before (fr,sd,nb,"","", false);
+	     out_before (fr,sd,nb,"","", false, false);
 	     out (name^"( ");
 	     prod_instr (false,"",nb+1,true,true) (List.hd instrl);
 	     out(", ");
@@ -351,7 +363,7 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
 	   end
        | "new_MLpair" -> 
 	  begin
-	     out_before (fr,sd,nb,"MLpair ","", true);
+	     out_before (fr,sd,nb,"MLpair ","", true, false);
 	     out (name^"( ");
 	     prod_instr (false,"",nb+1,true,false) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", ");
@@ -362,7 +374,7 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
 	   end
        | "new_MLlist" ->
 	   begin
-	     out_before (fr,sd,nb,"MLlist ","", true);
+	     out_before (fr,sd,nb,"MLlist ","", true, false);
 	     out (name^"( ");
 	     prod_instr (false,"",nb+1,true,false) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", ");
@@ -376,7 +388,7 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
        | "MLltint"
        | "MLleint" ->
 	   begin
-	     out_before (fr,sd,nb,"MLbool ","", true);
+	     out_before (fr,sd,nb,"MLbool ","", true, false);
 	     out (name^"( ");
 	     prod_instr (false,"",nb+1,false,false) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", ");
@@ -387,7 +399,7 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
 	   end
        | "MLequal" ->
 	   begin
-	     out_before (fr,sd,nb,"MLbool ","", true);
+	     out_before (fr,sd,nb,"MLbool ","", true, false);
 	     out (name^"( ");
 	     prod_instr (false,"",nb+1,true,false) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", ");
@@ -402,7 +414,7 @@ let rec prod_instr (fr,sd,nb,adr,fadr) instr  = match instr with
        | "MLmulint"
        | "MLdivint" ->
 	   begin
-	     out_before (fr,sd,nb,"MLint ","", true);
+	     out_before (fr,sd,nb,"MLint ","", true, false);
  	     out (name^"( ");
 	     prod_instr (false,"",nb+1,false,false) (List.hd instrl);
 	     List.iter2 (fun x y -> out (", ");

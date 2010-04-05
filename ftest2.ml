@@ -1,13 +1,12 @@
 let a = 2;;
 let b = 2;;
 
+let l = ("a","b")::("c","d")::[];;
+let tll = function x -> hd(tl x);;
+let fstp = function x -> fst (tll x);;
 
-let p = ("c","d");;
-let q = 2.1::2.2::[];;
-let test = function a -> function b -> if (a = b) then true else false;;
-let test5 = function a -> function b -> if (a = b) then true else false;;
-let test6 = function a -> function b -> if (a = b) then true else false;;
-let test2 = hd q;;
-let test3 = test test5 test6;;
+let test = function l -> fstp l;;
+
+fstp l;;
 
 
