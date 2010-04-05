@@ -1,0 +1,20 @@
+CC=gcc
+CCR=ar
+SRC=$(wildcard ftest*.c)
+OBJ=$(SRC:.c=.o)
+RUNTIME=runtime.a
+EXEC=$(OBJ:.o=)
+
+all: $(EXEC)
+     
+$(EXEC) : $(OBJ) $(RUNTIME)
+	$(CC) $@.o -o $@ $(RUNTIME)
+
+$(RUNTIME) : runtime.o
+	$(CCR) -q $@ $< 
+
+%.o : %.c
+	$(CC) -c $<
+
+clean:
+	@rm -rf $(EXEC) $(RUNTIME) runtime.o $(OBJ)
